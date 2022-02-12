@@ -1,0 +1,18 @@
+token ::=
+  token_ls ^^ T
+  <:> value(V) ::- T ^^ value(V).
+
+token_ls ::=
+  tokenc ^^ C,
+  token_ls ^^ Cs
+  <:> value([H|T]) ::-
+         C ^^ value(H),
+         Cs ^^ value(T).
+token_ls ::=
+  []
+  <:> value([]).
+
+tokenc ::=
+  [X],
+  {token_char(X)}
+  <:> value(X).
