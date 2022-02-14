@@ -18,13 +18,22 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-:- initialization((
-	logtalk_load(basic_types(loader)),
-	logtalk_load(os(loader)),
-	logtalk_load([
-		'src/dctg_print_tree',
-		'src/dctg_translate',
-		'src/dctg_evaluate',
-		'src/dctg_process'
-	], [])
-)).
+:- category(dctg_tools).
+
+	:- info([
+		version is 1:0:0,
+		author is 'Lindsey Spratt',
+		date is 2022-2-14,
+		comment is 'Tools for running grammar produced by DCTG.'
+	]).
+
+	:- public(c/3).
+	:- mode(c(+list, -list, -list), one).
+	:- info(c/3, [
+		comment is 'Head of first argument list is the second argument and rest of first argument list is the third argument.',
+		argnames is ['List', 'Head', 'Tail']
+	]).
+
+	c([X|S], X, S).
+
+:- end_category.

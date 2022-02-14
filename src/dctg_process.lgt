@@ -124,7 +124,7 @@
 		SemClause = (^^(A,B) :- ::eval(A, B)),
 		create_object(
 			GrammarObject,
-			[imports([dctg_tools,dctg_evaluate])],
+			[imports(dctg_evaluate)],
 			[public(ParseIndicator), public(EvaluateIndicator), public((^^)/2)],
 			[ParseClause, EvaluateClause, SemClause| Clauses]
 		).
