@@ -3,7 +3,7 @@
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-2-12,
+		date is 2022-2-14,
 		comment is 'DCTG Print Tree.'
 	]).
 
@@ -17,28 +17,22 @@
 	:- public(print_node/2).
 	:- mode(print_node(+term, +term), one).
 	:- info(print_node/2, [
-		comment is 'Print Name and Semantics from a DCTG node.',
+		comment is 'Print ``Name`` and ``Semantics`` from a DCTG node.',
 		argnames is ['Name', 'Semantics']
 	]).
 
 	:- public(print_semantics/1).
 	:- mode(print_semantics(+term), one).
 	:- info(print_semantics/1, [
-		comment is 'Print DCTGSemantics from a DCTG tree node.',
+		comment is 'Print ``DCTGSemantics`` from a DCTG tree node.',
 		argnames is ['DCTGSemantics']
 	]).
-	
-	:- op(1001,xfy,'...').
-	:- op(1150, xfx, '::=').
-	:- op(1175, xfx, <:>).
-	:- op(1150, xfx, ::-).
-	:- op(650, yfx, ^^).
-	:- op(1120, xfx, <<+).
-	:- op(1110, xfx, +>>).
+
+	:- include(operators).
 
 	print_tree(Tree) :-
 		print_tree(Tree, 0).
-		
+
 	print_tree(node(Name, Children, Sem), Indent) :-
 		!,
 		utilities::tab(Indent),
@@ -85,6 +79,5 @@
 		functor(X, F, N),
 		utilities::writeseqnl(['Unable to print term with functor "', F, '"and arity', N, '.']),
 		throw(error(type_error(node, X), print_children/2)).
-	
 
 :- end_category.
