@@ -25,7 +25,7 @@
 	extends(lgtunit)).
 
 	:- info([
-		version is 0:1:0,
+		version is 0:2:0,
 		date is 2022-02-14,
 		author is 'Lindsey Spratt',
 		comment is 'Test cases for the DCTG translator.'
@@ -38,7 +38,6 @@
 	% terminal tests with list notation
 
 	:- uses(dctg, [process(A,_) as proc(A)]).
-	:- uses(user, [numbervars/3]).
 
 	test(dctg_terminal_list_01, true) :-
 		proc((p ::= [])).
@@ -202,13 +201,11 @@
 		file_path('../examples/token.dctg', Path),
 		dctg::consult(Path, tkn), % tkn is a dynamically-defined object.
 		tkn::evaluate([a,b,c], V).
-	test(dctg_example_02, true(V == E)) :-
+	test(dctg_example_02, variant(V, E)) :-
 		file_path('../examples/logic.dctg', Path),
 		dctg::consult(Path, lgc), % lgc is a dynamically-defined object.
 		E = exists(_R56,musician(_R56) & forall(_R140, =>(scientist(_R140) & hesitates(_R140), helps(_R56,_R140)))),
-		numbervars(E, 0, _),
-		lgc::evaluate([a,musician,helps,every,scientist,that,hesitates], V),
-		numbervars(V, 0, _).
+		lgc::evaluate([a,musician,helps,every,scientist,that,hesitates], V).
 
 	% auxiliary predicates
 
