@@ -73,22 +73,22 @@
 
 	t_rp(!, St, St, S, S, !) :- !.
 	t_rp([], St, [[]|St], S, S1, S=S1) :- !.
-	t_rp([X], St, [[NX]|St], S, SR, ::c(S, X, SR)) :-
+	t_rp([X], St, [[NX]|St], S, SR, S = [X| SR]) :-
 		dbg('    t_rp 3: ~w'+[rp([X], St)]),
 		integer(X),
 		char_code(NX, X),
 		!.
-	t_rp([X], St, [X|St], S, SR, ::c(S, X, SR)) :- 
+	t_rp([X], St, [X|St], S, SR, S = [X| SR]) :-
 		dbg('    t_rp 4: ~w'+[rp([X], St)]),
 		!.
-	t_rp([X|R], St, [[NX|NR]|St], S, SR, (c(S, X, SR1), RB)) :-
+	t_rp([X|R], St, [[NX|NR]|St], S, SR, (S = [X| SR1], RB)) :-
 		integer(X),
 		char_code(NX, X),
 		!,
 		context(Context),
 		check(list_or_partial_list, R, Context),
 		t_rp(R, St, [NR|St], SR1, SR, RB).
-	t_rp([X|R], St, [[X|NR]|St], S, SR, (::c(S, X, SR1), RB)) :-
+	t_rp([X|R], St, [[X|NR]|St], S, SR, (S = [X| SR1], RB)) :-
 		!,
 		context(Context),
 		check(list_or_partial_list, R, Context),

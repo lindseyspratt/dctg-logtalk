@@ -24,7 +24,6 @@
 	logtalk_load([
 		'../src/dctg_print_tree',
 		'../src/dctg_translate',
-		'../src/dctg_tools',
 		'../src/dctg_evaluate',
 		'../src/dctg_process'
 		], 
