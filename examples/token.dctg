@@ -1,3 +1,5 @@
+dctg_main(token/0, value/1).
+
 token ::=
   token_ls ^^ T
   <:> value(V) ::- T ^^ value(V).
@@ -16,3 +18,5 @@ tokenc ::=
   [X],
   {token_char(X)}
   <:> value(X).
+
+token_char(_).

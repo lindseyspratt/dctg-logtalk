@@ -1,0 +1,149 @@
+% :- op(600,xfy,=>).
+% :- op(500,xfy,&).
+% :- op(750,xfy,∑).
+% :- op(750,xfy,∏).
+
+dctg_main(sentence/0, logic/1).
+
+sentence ::=
+  assertion ^^ A
+  <:>
+  logic(Proposition) ::- A ^^ logic(Proposition).
+sentence ::=
+  conditional ^^ C
+  <:>
+  logic(Proposition) ::- C ^^ logic(Proposition).
+
+assertion ::=
+  noun_phrase ^^ N, 
+  verb_phrase ^^ V,
+  {agree(N, V)}
+  <:>
+  logic(Proposition) ::-
+    N ^^ logic(Object, Predicate, Proposition),
+    V ^^ logic(Object, Predicate).
+
+conditional ::=
+  [if],
+  assertion ^^ Antecedent,
+  optional_comma,
+  [then],
+  assertion ^^ Consequent
+  <:>
+  logic(=>(AntecedentProposition, ConsequentProposition)) ::-
+    Antecedent ^^ logic(AntecedentProposition),
+    Consequent ^^ logic(ConsequentProposition).
+
+noun_phrase ::=
+  determiner ^^ D, 
+  noun ^^ N,
+  rel_clause ^^ R
+  <:>
+  (agree(Num) ::-
+     N ^^ agree(Num),
+     D ^^ agree(Num),
+     R ^^ agree(Num)),
+  (logic(Object, AdditionalProperty, Proposition) ::-
+     D ^^ logic(Object, SelectionProperty, AdditionalProperty, Proposition),
+     N ^^ logic(Object, ObjectProperty),
+     R ^^ logic(Object, ObjectProperty, SelectionProperty)).
+noun_phrase ::=
+  name ^^ N
+  <:>
+  agree(singular),
+  (logic(X, P, P) ::-
+     N ^^ logic(X)).
+
+
+verb_phrase ::=
+  verb ^^ V,
+  {transitive(V)},
+  noun_phrase ^^ N
+  <:>
+  (agree(Num) ::-
+     V ^^ agree(Num),
+     N ^^ agree(Num1)),
+  (logic(SubjectTerm, Proposition) ::-
+     V ^^ logic(transitive, SubjectTerm, ObjectTerm, Predicate),
+     N ^^ logic(ObjectTerm, Predicate, Proposition)).
+verb_phrase ::=
+  verb ^^ V,
+  {intransitive(V)}
+  <:>
+  (agree(Num) ::-
+     V ^^ agree(Num)),
+  (logic(X, P) ::-
+     V ^^ logic(intransitive, X, P)).
+
+
+rel_clause ::=
+  [that],
+  verb_phrase ^^ V
+  <:>
+  (agree(Num) ::-
+     V ^^ agree(Num)),
+  (logic(Object, AdditionalProperty, &(AdditionalProperty, Predicate)) ::-
+     V ^^ logic(Object, Predicate)).
+rel_clause ::=
+  []
+  <:>
+  agree(Num),
+  logic(X, P, P).
+
+determiner ::=
+  [every]
+  <:>
+  agree(singular),
+  logic(Object, SelectingProperty, AdditionalProperty,
+        forall(Object, =>(SelectingProperty, AdditionalProperty))). % was ∏
+determiner ::=
+  [a]
+  <:>
+  agree(singular),
+  logic(Object, SelectingProperty, AdditionalProperty,
+        exists(Object, &(SelectingProperty, AdditionalProperty))). % was ∑
+
+noun ::=
+  [musician]
+  <:>
+  agree(singular),
+  logic(X, musician(X)).
+noun ::=
+  [scientist]
+  <:>
+  agree(singular),
+  logic(X, scientist(X)).
+
+name ::=
+  [john]
+  <:>
+  logic(john).
+name ::=
+  [mary]
+  <:>
+  logic(mary).
+
+verb ::=
+  [helps]
+  <:>
+  agree(singular),
+  logic(transitive, X, Y, helps(X, Y)),
+  logic(intransitive, X, helps(X)).
+verb ::=
+  [hesitates]
+  <:>
+  agree(singular),
+  logic(intransitive, X, hesitates(X)).
+
+optional_comma ::= [','].
+optional_comma ::= [].
+
+agree(N, V) :-
+  N ^^ agree(Num),
+  V ^^ agree(Num).
+
+transitive(V) :-
+  V ^^ logic(transitive, _, _, _).
+
+intransitive(V) :-
+  V ^^ logic(intransitive, _, _).
