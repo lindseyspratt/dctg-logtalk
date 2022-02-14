@@ -3,7 +3,7 @@
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-2-12,
+		date is 2022-2-14,
 		comment is 'DCTG evaluate semantics.'
 	]).
 
@@ -23,31 +23,36 @@
 	
 	:- private('dctg$trace'/1).
 	:- private('dctg$notrace'/1).
-	
+
+	:- uses(type, [
+		check/3
+	]).
+
 	:- include(operators).
 
 	^^(Node, Args) :- eval(Node, Args).
 	
 	eval(node(Name, _, Sem), Args) :-
-		trace_node_message('call','fail',Name, Sem, Args),
-		{'$must_be_instantiated'(Sem)},
+		trace_node_message('call', 'fail', Name, Sem, Args),
+		context(Context),
+		check(nonvar, Sem, Context),
 		dctg_eval(Sem, Args), % Sem ^^ Args
-		trace_node_message('exit','redo',Name, Sem, Args).
+		trace_node_message('exit', 'redo', Name, Sem, Args).
 
 	:- meta_predicate(dctg_eval(*,*)).
 	
 	dctg_eval(((Args ::- Traverse), _Rules), Args) :-
 		!,
-		trace_message('call','fail',Args,Traverse),
+		trace_message('call', 'fail', Args, Traverse),
 		call(Traverse),
-		trace_message('exit','redo',Args,Traverse).
+		trace_message('exit', 'redo', Args, Traverse).
 	dctg_eval((Args, _Rules), Args) :- !.
 	dctg_eval((_, Rules), Args) :-
 		dctg_eval(Rules, Args).
 	dctg_eval((Args ::- Traverse), Args) :-
-		trace_message('call','fail', Args, Traverse),
+		trace_message('call', 'fail', Args, Traverse),
 		call(Traverse),
-		trace_message('exit','redo', Args, Traverse).
+		trace_message('exit', 'redo', Args, Traverse).
 	dctg_eval(Args, Args).
 
 	/*
@@ -68,17 +73,17 @@
 
 	trace_node_message(Success, Failure, Name, Sem, Args) :-
 		traced_attachment(Args)
-		  -> (	nl,
+			-> (	nl,
 				write(Success),
 				utilities::tab(1),
-		   	 	trace_node_message1(Name, Sem, Args)
-		     ;
-			 	nl,
+				trace_node_message1(Name, Sem, Args)
+			;
+				nl,
 				write(Failure),
 				utilities::tab(1),
-		    	trace_node_message1(Name, Sem, Args),
-		    	!,
-		    	fail
+				trace_node_message1(Name, Sem, Args),
+				!,
+				fail
 			 )
 		; true.
 
@@ -127,5 +132,5 @@
 	dctg_notrace(F) :-
 		assertz('dctg$notrace'(F)),
 		retractall('dctg$trace'(F)).
-		
+
 :- end_category.

@@ -5,17 +5,20 @@
 	extends(lgtunit)).
 
 	:- info([
-		version is 0:0:1,
-		date is 2020-06-03,
+		version is 0:1:0,
+		date is 2022-02-14,
 		author is 'Lindsey Spratt',
 		comment is 'Test cases for the DCTG translator.'
 	]).
+
+	:- set_logtalk_flag(unknown_entities, silent).
 
 	:- include('../src/operators').
 
 	% terminal tests with list notation
 
 	:- uses(dctg, [dctg_process(A,_) as proc(A)]).
+	:- uses(user, [numbervars/3]).
 
 	test(dctg_terminal_list_01, true) :-
 		proc((p ::= [])).
@@ -176,13 +179,22 @@
 		proc((a ::= [] <:> b ::- c)).
 	
 	test(dctg_example_01, true(V == [a,b,c])) :-
-		dctg::dctg_consult('../examples/token.dctg', tkn), % tkn is a dynamically-defined object.
+		file_path('../examples/token.dctg', Path),
+		dctg::dctg_consult(Path, tkn), % tkn is a dynamically-defined object.
 		tkn::evaluate([a,b,c], V).
 	test(dctg_example_02, true(V == E)) :-
-		dctg::dctg_consult('../examples/logic.dctg', lgc), % lgc is a dynamically-defined object.
-		E = exists(_R56,musician(_R56)&forall(_R140,=>(scientist(_R140)&hesitates(_R140),helps(_R56,_R140)))),
-		numbervars(E),
+		file_path('../examples/logic.dctg', Path),
+		dctg::dctg_consult(Path, lgc), % lgc is a dynamically-defined object.
+		E = exists(_R56,musician(_R56) & forall(_R140, =>(scientist(_R140) & hesitates(_R140), helps(_R56,_R140)))),
+		numbervars(E, 0, _),
 		lgc::evaluate([a,musician,helps,every,scientist,that,hesitates], V),
-		numbervars(V).
-	
+		numbervars(V, 0, _).
+
+	% auxiliary predicates
+
+	file_path(File, Path) :-
+		this(This),
+		object_property(This, file(_, Directory)),
+		atom_concat(Directory, File, Path).
+
 :- end_object.
