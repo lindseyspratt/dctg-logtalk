@@ -1,4 +1,24 @@
-:- category(evaluate).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Copyright (c) 2022 Lindsey Spratt
+%  SPDX-License-Identifier: MIT
+%
+%  Licensed under the MIT License (the "License");
+%  you may not use this file except in compliance with the License.
+%  You may obtain a copy of the License at
+%
+%      https://opensource.org/licenses/MIT
+%
+%  Unless required by applicable law or agreed to in writing, software
+%  distributed under the License is distributed on an "AS IS" BASIS,
+%  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%  See the License for the specific language governing permissions and
+%  limitations under the License.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+:- category(dctg_evaluate).
 
 	:- info([
 		version is 1:0:0,
@@ -22,7 +42,10 @@
 	]).
 	
 	:- private('dctg$trace'/1).
+	:- dynamic('dctg$trace'/1).
+
 	:- private('dctg$notrace'/1).
+	:- dynamic('dctg$notrace'/1).
 
 	:- uses(type, [
 		check/3
@@ -74,13 +97,11 @@
 	trace_node_message(Success, Failure, Name, Sem, Args) :-
 		traced_attachment(Args)
 			-> (	nl,
-				write(Success),
-				utilities::tab(1),
+				write(Success), write(' '),
 				trace_node_message1(Name, Sem, Args)
 			;
 				nl,
-				write(Failure),
-				utilities::tab(1),
+				write(Failure), write(' '),
 				trace_node_message1(Name, Sem, Args),
 				!,
 				fail
@@ -90,7 +111,7 @@
 
 	trace_node_message1(Name, Sem, Args) :-
 		write('attachment: '),
-		print(Args),
+		writeq(Args),
 		nl,
 		write('on node: '),
 		::print_node(Name, Sem).
@@ -100,20 +121,15 @@
 		\+ traced_attachment(Args),
 		!.
 	trace_message(Success,_Failure,_Args,Body) :-
-		write(Success),
-		utilities::tab(1),
+		write(Success), write(' '),
 		::print_semantics(Body),
 		nl.
 	trace_message(_Success, Failure, _Args,Body) :-
-		write(Failure),
-		utilities::tab(1),
+		write(Failure), write(' '),
 		::print_semantics(Body),
 		nl,
 		!,
 		fail.
-
-	:- dynamic('dctg$trace'/1).
-	:- dynamic('dctg$notrace'/1).
 
 	traced_attachment(Args) :-
 		\+ \+ 'dctg$trace'(Args),

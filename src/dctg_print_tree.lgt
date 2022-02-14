@@ -1,4 +1,24 @@
-:- category(print_tree).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Copyright (c) 2022 Lindsey Spratt
+%  SPDX-License-Identifier: MIT
+%
+%  Licensed under the MIT License (the "License");
+%  you may not use this file except in compliance with the License.
+%  You may obtain a copy of the License at
+%
+%      https://opensource.org/licenses/MIT
+%
+%  Unless required by applicable law or agreed to in writing, software
+%  distributed under the License is distributed on an "AS IS" BASIS,
+%  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%  See the License for the specific language governing permissions and
+%  limitations under the License.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+:- category(dctg_print_tree).
 
 	:- info([
 		version is 1:0:0,
@@ -35,12 +55,12 @@
 
 	print_tree(node(Name, Children, Sem), Indent) :-
 		!,
-		utilities::tab(Indent),
+		tab(Indent),
 		print_node(Name, Sem),
 		NextIndent is Indent + 2,
 		print_children(Children, NextIndent).
 		print_tree(Terminal, Indent) :-
-		utilities::tab(Indent),
+		tab(Indent),
 		write(Terminal), nl.
 
 	print_node(Name, Sem) :-
@@ -55,7 +75,7 @@
 	print_semantics((Rule, OtherRules)) :-
 		!,
 		print_rule(Rule),
-		utilities::tab(1),
+		tab(1),
 		print_semantics(OtherRules).
 		print_semantics(Rule) :-
 		print_rule(Rule).
@@ -77,7 +97,20 @@
 		print_children(OtherNodes, Indent).
 	print_children(X, _I) :-
 		functor(X, F, N),
-		utilities::writeseqnl(['Unable to print term with functor "', F, '"and arity', N, '.']),
+		writeseqnl(['Unable to print term with functor "', F, '"and arity', N, '.']),
 		throw(error(type_error(node, X), print_children/2)).
+
+	% auxiliary predicates
+
+	tab(0) :- !.
+	tab(N) :-
+		write(' '),
+		K is N-1,
+		tab(K).
+
+	writeseqnl([]) :- nl.
+	writeseqnl([H|T]) :-
+		write(H),
+		writeseqnl(T).
 
 :- end_category.
