@@ -1,4 +1,24 @@
-:- category(translate).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Copyright (c) 2022 Lindsey Spratt
+%  SPDX-License-Identifier: MIT
+%
+%  Licensed under the MIT License (the "License");
+%  you may not use this file except in compliance with the License.
+%  You may obtain a copy of the License at
+%
+%      https://opensource.org/licenses/MIT
+%
+%  Unless required by applicable law or agreed to in writing, software
+%  distributed under the License is distributed on an "AS IS" BASIS,
+%  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%  See the License for the specific language governing permissions and
+%  limitations under the License.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+:- category(dctg_translate).
 
 	:- info([
 		version is 1:0:0,
@@ -21,6 +41,13 @@
 		argnames is ['ExpressionBody', 'St', 'StR', 'S', 'SR', 'Goal']
 	]).
 
+	:- private(add_extra_args/3).
+	:- mode(add_extra_args(+list, +evaluable, -evaluable), one).
+	:- info(add_extra_args/3, [
+		comment is 'Extend ``BaseStructure`` functor with "DCTG" and create ``ExtendedStructure`` with extended functor and the concatenation of the base arguments and the ``NewArguments``.',
+		argnames is ['NewArguments', 'BaseStructure', 'ExtendedStructure']
+	]).
+
 	:- uses(list, [
 		append/3
 	]).
@@ -40,9 +67,9 @@
 		context(Context),
 		check(list, List, Context),
 		append(List, SR, List2),
-		utilities::add_extra_args([node(LP, StL, Sem), S, List2], LP, H).
+		add_extra_args([node(LP, StL, Sem), S, List2], LP, H).
 	t_lp(LP, StL, S, SR, Sem, H) :-
-		utilities::add_extra_args([node(LP, StL, Sem), S, SR], LP, H).
+		add_extra_args([node(LP, StL, Sem), S, SR], LP, H).
 
 	t_rp(!, St, St, S, S, !) :- !.
 	t_rp([], St, [[]|St], S, S1, S=S1) :- !.
@@ -85,10 +112,18 @@
 		!,
 		context(Context),
 		check(callable, T, Context),
-		utilities::add_extra_args([N, S, SR], T, Tt).
+		add_extra_args([N, S, SR], T, Tt).
 	t_rp(T, St, [St1|St], S, SR, Tt) :-
 		context(Context),
 		check(callable, T, Context),
-		utilities::add_extra_args([St1, S, SR], T, Tt).
+		add_extra_args([St1, S, SR], T, Tt).
+
+	% auxiliary predicates
+
+	add_extra_args(L, T, T1) :-
+		T =.. [F|Tlist],
+		atom_concat(F, 'DCTG', Nf),
+		append(Tlist, L, Tlist1),
+		T1 =.. [Nf|Tlist1].
 
 :- end_category.

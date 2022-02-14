@@ -1,32 +1,59 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Copyright (c) 2022 Lindsey Spratt
+%  SPDX-License-Identifier: MIT
+%
+%  Licensed under the MIT License (the "License");
+%  you may not use this file except in compliance with the License.
+%  You may obtain a copy of the License at
+%
+%      https://opensource.org/licenses/MIT
+%
+%  Unless required by applicable law or agreed to in writing, software
+%  distributed under the License is distributed on an "AS IS" BASIS,
+%  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%  See the License for the specific language governing permissions and
+%  limitations under the License.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 :- object(dctg,
-	imports([print_tree, translate])).
+	imports([dctg_print_tree, dctg_translate])).
 
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
 		date is 2022-2-14,
-		comment is 'Definite Clause Translation Grammar, based on the work of Harvey Abramson.'
+		comment is 'Definite Clause Translation Grammar (DCTG), based on the work of Harvey Abramson.'
 	]).
 
-	:- public(dctg_process/2).
-	:- mode(dctg_process(+evaluable, -clause), one).
-	:- info(dctg_process/2, [
+	:- public(process/2).
+	:- mode(process(+evaluable, -clause), one).
+	:- info(process/2, [
 		comment is 'Process a Definite Clause Translation Grammar expression to create a Prolog clause that implements the expression.',
 		argnames is ['DCTGExpression', 'Clause']
 	]).
 
-	:- public(dctg_consult/2).
-	:- mode(dctg_consult(+file_path, +atom), one).
-	:- info(dctg_consult/2, [
-		comment is 'Create a GrammarObject from the Definite Clause Grammar expressions in the given File.',
+	:- public(consult/2).
+	:- mode(consult(+file_path, +atom), one).
+	:- info(consult/2, [
+		comment is 'Create a ``GrammarObject`` from the Definite Clause Grammar expressions in the given ``File``.',
 		argnames is ['File', 'GrammarObject']
 	]).
 
-	:- public(dctg_sentence/1).
-	:- mode(dctg_sentence(+list), one).
-	:- info(dctg_sentence/1, [
-		comment is 'Process the List using the DCTG predicate sentenceDCTG/3 (this presumes having processed a DCTG expression with the name "sentence").',
+	:- public(sentence/1).
+	:- mode(sentence(+list), one).
+	:- info(sentence/1, [
+		comment is 'Process the ``List`` using the DCTG predicate ``sentenceDCTG/3`` (this presumes having processed a DCTG expression with the name "sentence").',
 		argnames is ['List']
+	]).
+
+	:- private(tidy/2).
+	:- mode(tidy(+term, -term), one).
+	:- info(tidy/2, [
+		comment is 'Tidy (simplify) the ``InputExpression`` to create the ``OutputExpression``.',
+		argnames is ['InputExpression', 'OutputExpression']
 	]).
 
 	/*
@@ -47,29 +74,29 @@
 
 	:- include(operators).
 
-	dctg_process((LP::=[]<:>Sem),H) :-
+	process((LP::=[]<:>Sem),H) :-
 		!,
-		::t_lp(LP, [], S, S, Sem, H).
-	dctg_process((LP::=[]), H) :-
+		^^t_lp(LP, [], S, S, Sem, H).
+	process((LP::=[]), H) :-
 		!,
-		::t_lp(LP, [], S, S, true, H).
-	dctg_process((LP::=RP<:>Sem), (H:-B)) :-
+		^^t_lp(LP, [], S, S, true, H).
+	process((LP::=RP<:>Sem), (H:-B)) :-
 		!,
 		dbg('  Process 3: ~w'+[rp(RP)]),
-		::t_rp(RP, [], StL, S, SR, B1),
+		^^t_rp(RP, [], StL, S, SR, B1),
 		reverse(StL, RStL),
 		dbg('  Process 3: ~w'+[lp(LP, RStL, S, SR)]),
-		::t_lp(LP, RStL, S, SR, Sem, H),
-		utilities::tidy(B1, B).
-	dctg_process((LP::=RP), (H:-B)) :-
+		^^t_lp(LP, RStL, S, SR, Sem, H),
+		tidy(B1, B).
+	process((LP::=RP), (H:-B)) :-
 		!,
-		dctg_process((LP::=RP<:>true), (H:-B)).
-	dctg_process(end_of_file, _) :- !, fail.
-	dctg_process(Clause, Clause).
-%	dctg_process(ClauseIN, ClauseOUT) :-
+		process((LP::=RP<:>true), (H:-B)).
+	process(end_of_file, _) :- !, fail.
+	process(Clause, Clause).
+%	process(ClauseIN, ClauseOUT) :-
 %		expand_dcg(ClauseIN, ClauseOUT).
 
-	dctg_consult(File, GrammarObject) :-
+	consult(File, GrammarObject) :-
 		open(File, read, S),
 		dctg_consume(S, Clauses),
 		close(S),
@@ -78,7 +105,7 @@
 	dctg_consume(S, [Y|Clauses]) :-
 		read(S, X),
 		dbg('Consuming ~w'+[X]),
-		dctg_process(X,Y),
+		process(X,Y),
 		!,
 		dctg_consume(S, Clauses).
 	dctg_consume(_, []).
@@ -96,10 +123,10 @@
 		),
 		SemClause = (^^(A,B) :- ::eval(A, B)),
 		create_object(
-			GrammarObject, 
-			[imports([dctg_tools,evaluate])], 
+			GrammarObject,
+			[imports([dctg_tools,dctg_evaluate])],
 			[public(ParseIndicator), public(EvaluateIndicator), public((^^)/2)],
-			[ParseClause, EvaluateClause, SemClause|Clauses]
+			[ParseClause, EvaluateClause, SemClause| Clauses]
 		).
 
 	/*
@@ -133,13 +160,25 @@
 		functor(EvaluateHead, _, EvalArity),
 		EvaluateClause = (EvaluateHead :- MainHead, ::eval(Tree, SemHead)).
 
-/*	dctg_sentence(Source) :-
+/*	sentence(Source) :-
 		sentenceDCTG(T, Source, []),
 		::dctg_print_tree(T),
 		T ^^ logic(Proposition),
 		nl,
 		write(Proposition).
 */
-	A ^^ B :- ::eval(A, B).
+	A ^^ B :-
+		::eval(A, B).
+
+	% auxiliary predicates
+
+	tidy(((P1, P2), P3), Q) :-
+		!,
+		tidy((P1, (P2, P3)), Q).
+	tidy((P1, P2), (Q1, Q2)) :-
+		!,
+		tidy(P1, Q1),
+		tidy(P2, Q2).
+	tidy(A, A).
 
 :- end_object.
