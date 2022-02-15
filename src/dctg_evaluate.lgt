@@ -18,7 +18,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-:- category(dctg_evaluate).
+:- category(dctg_evaluate,
+	extends(dctg_print_tree)).
 
 	:- info([
 		version is 1:0:0,
@@ -40,18 +41,26 @@
 		comment is 'The eval predicate evaluates the DCTG semantic Goals to with respect to the DCTG Tree semantics.',
 		argnames is ['Tree', 'Goals']
 	]).
-	
-	:- private('dctg$trace'/1).
-	:- dynamic('dctg$trace'/1).
 
-	:- private('dctg$notrace'/1).
-	:- dynamic('dctg$notrace'/1).
+	:- public(trace/1).
+
+	:- public(untrace/1).
+
+	:- public(notrace/0).
+
+	:- public(notrace/1).
+
+	:- private(trace_/1).
+	:- dynamic(trace_/1).
+
+	:- private(notrace_/1).
+	:- dynamic(notrace_/1).
 
 	:- uses(type, [
 		check/3
 	]).
 
-	:- include(operators).
+	:- include(dctg_operators).
 
 	^^(Node, Args) :- eval(Node, Args).
 	
@@ -114,7 +123,7 @@
 		writeq(Args),
 		nl,
 		write('on node: '),
-		::print_node(Name, Sem).
+		^^print_node(Name, Sem).
 
 
 	trace_message(_Success,_Failure,Args,_Body) :-
@@ -122,31 +131,31 @@
 		!.
 	trace_message(Success,_Failure,_Args,Body) :-
 		write(Success), write(' '),
-		::print_semantics(Body),
+		^^print_semantics(Body),
 		nl.
 	trace_message(_Success, Failure, _Args,Body) :-
 		write(Failure), write(' '),
-		::print_semantics(Body),
+		^^print_semantics(Body),
 		nl,
 		!,
 		fail.
 
 	traced_attachment(Args) :-
-		\+ \+ 'dctg$trace'(Args),
-		\+ 'dctg$notrace'(Args).
+		\+ \+ trace_(Args),
+		\+ notrace_(Args).
 
-	dctg_trace(F) :-
-		assertz('dctg$trace'(F)),
-		retractall('dctg$notrace'(F)).
+	trace(F) :-
+		assertz(trace_(F)),
+		retractall(notrace_(F)).
 
-	dctg_untrace(F) :-
-		retractall('dctg$trace'(F)).
+	untrace(F) :-
+		retractall(trace_(F)).
 
-	dctg_notrace :-
-		retractall('dctg$trace'(_)).
+	notrace :-
+		retractall(trace_(_)).
 
-	dctg_notrace(F) :-
-		assertz('dctg$notrace'(F)),
-		retractall('dctg$trace'(F)).
+	notrace(F) :-
+		assertz(notrace_(F)),
+		retractall(trace_(F)).
 
 :- end_category.

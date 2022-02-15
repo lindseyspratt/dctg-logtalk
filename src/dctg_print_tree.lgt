@@ -48,7 +48,7 @@
 		argnames is ['DCTGSemantics']
 	]).
 
-	:- include(operators).
+	:- include(dctg_operators).
 
 	print_tree(Tree) :-
 		print_tree(Tree, 0).

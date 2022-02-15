@@ -19,12 +19,13 @@
 
 
 :- object(dctg,
+	implements(expanding),
 	imports([dctg_print_tree, dctg_translate])).
 
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-2-14,
+		date is 2022-2-15,
 		comment is 'Definite Clause Translation Grammar (DCTG), based on the work of Harvey Abramson.'
 	]).
 
@@ -36,10 +37,24 @@
 	]).
 
 	:- public(consult/2).
-	:- mode(consult(+file_path, +atom), one).
+	:- mode(consult(+atom, -atom), one).
 	:- info(consult/2, [
-		comment is 'Create a ``GrammarObject`` from the Definite Clause Grammar expressions in the given ``File``.',
+		comment is 'Consults a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file.',
 		argnames is ['File', 'GrammarObject']
+	]).
+
+	:- public(consult/1).
+	:- mode(consult(+atom), one).
+	:- info(consult/1, [
+		comment is 'Consults a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file.',
+		argnames is ['File']
+	]).
+
+	:- public(compile/1).
+	:- mode(compile(+atom), one).
+	:- info(compile/1, [
+		comment is 'Compiles a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) to a Logalk file written to the same directory and defining a ``GrammarObject`` object named after the file.',
+		argnames is ['File']
 	]).
 
 	:- public(sentence/1).
@@ -72,15 +87,49 @@
 		print_message(debug, dctg, Message) as dbg(Message)
 	]).
 
-	:- include(operators).
+	:- uses(os, [
+		decompose_file_name/4
+	]).
 
-	process((LP::=[]<:>Sem),H) :-
+	:- include(dctg_operators).
+
+	process(DCTGExpression, Clause) :-
+		term_expansion(DCTGExpression, Clause).
+
+	consult(Path, Name) :-
+		decompose_file_name(Path, _, Name, '.dctg'),
+		this(This),
+		logtalk_load(Path, [hook(This)]).
+
+	consult(Path) :-
+		consult(Path, _).
+
+	compile(Path) :-
+		decompose_file_name(Path, Directory, Name, '.dctg'),
+		atomic_list_concat([Directory, Name, '.lgt'], Output),
+		open(Output, write, Stream),
+		this(This),
+		logtalk_compile(Path, [hook(hook_pipeline([This,write_to_stream_hook(Stream,[quoted(true)])]))]),
+		close(Stream).
+
+	term_expansion(Term, _) :-
+		dbg('Consuming ~q'+[Term]),
+		fail.
+	term_expansion(begin_of_file, [(:- object(Object, imports(dctg_evaluate)))]) :-
+		logtalk_load_context(basename, Basename),
+		atom_concat(Object, '.dctg', Basename).
+	term_expansion(dctg_main(Main, Eval), [ParseDirective, EvaluateDirective, ParseClause, EvaluateClause, SemClause]) :-
+		grammar_main_predicate(Main, Eval, ParseIndicator, ParseClause, EvaluateIndicator, EvaluateClause),
+		ParseDirective = (:- public(ParseIndicator)),
+		EvaluateDirective = (:- public(EvaluateIndicator)),
+		SemClause = (^^(A,B) :- ::eval(A, B)).
+	term_expansion((LP::=[]<:>Sem), H) :-
 		!,
 		^^t_lp(LP, [], S, S, Sem, H).
-	process((LP::=[]), H) :-
+	term_expansion((LP::=[]), H) :-
 		!,
 		^^t_lp(LP, [], S, S, true, H).
-	process((LP::=RP<:>Sem), (H:-B)) :-
+	term_expansion((LP::=RP<:>Sem), (H:-B)) :-
 		!,
 		dbg('  Process 3: ~w'+[rp(RP)]),
 		^^t_rp(RP, [], StL, S, SR, B1),
@@ -88,46 +137,10 @@
 		dbg('  Process 3: ~w'+[lp(LP, RStL, S, SR)]),
 		^^t_lp(LP, RStL, S, SR, Sem, H),
 		tidy(B1, B).
-	process((LP::=RP), (H:-B)) :-
+	term_expansion((LP::=RP), (H:-B)) :-
 		!,
 		process((LP::=RP<:>true), (H:-B)).
-	process(end_of_file, _) :- !, fail.
-	process(Clause, Clause).
-%	process(ClauseIN, ClauseOUT) :-
-%		expand_dcg(ClauseIN, ClauseOUT).
-
-	consult(File, GrammarObject) :-
-		open(File, read, S),
-		dctg_consume(S, Clauses),
-		close(S),
-		define_grammar(GrammarObject, Clauses).
-
-	dctg_consume(S, [Y|Clauses]) :-
-		read(S, X),
-		dbg('Consuming ~w'+[X]),
-		process(X,Y),
-		!,
-		dctg_consume(S, Clauses).
-	dctg_consume(_, []).
-
-	define_grammar(GrammarObject, Clauses) :-
-		(	member(dctg_main(Main, Eval), Clauses) ->
-			true
-		;	context(Context),
-			throw(error(no_dctg_main_error(GrammarObject), Context))
-		),
-		grammar_main_predicate(Main, Eval, ParseIndicator, ParseClause, EvaluateIndicator, EvaluateClause),
-		(	current_object(GrammarObject) ->
-			abolish_object(GrammarObject)
-		;	true
-		),
-		SemClause = (^^(A,B) :- ::eval(A, B)),
-		create_object(
-			GrammarObject,
-			[imports(dctg_evaluate)],
-			[public(ParseIndicator), public(EvaluateIndicator), public((^^)/2)],
-			[ParseClause, EvaluateClause, SemClause| Clauses]
-		).
+	term_expansion(end_of_file, [(:- end_object), end_of_file]).
 
 	/*
 	Create
@@ -166,9 +179,9 @@
 		T ^^ logic(Proposition),
 		nl,
 		write(Proposition).
-*/
 	A ^^ B :-
 		::eval(A, B).
+*/
 
 	% auxiliary predicates
 

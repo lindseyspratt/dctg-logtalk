@@ -20,14 +20,19 @@
 
 :- initialization((
 	set_logtalk_flag(report, warnings),
-	logtalk_load(lgtunit(loader)),
+	logtalk_load(basic_types(loader)),
+	logtalk_load(os(loader)),
+	logtalk_load(hook_flows(hook_pipeline), [optimize(on)]),
+	logtalk_load(hook_objects(write_to_stream_hook), [optimize(on)]),
 	logtalk_load([
 		'../src/dctg_print_tree',
 		'../src/dctg_translate',
 		'../src/dctg_evaluate',
 		'../src/dctg_process'
-		], 
-		[source_data(on), debug(on)]),
+	], [
+		source_data(on), debug(on)
+	]),
+	logtalk_load(lgtunit(loader)),
 	logtalk_load(tests, [hook(lgtunit)]),
 	tests::run
 )).

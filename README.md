@@ -1,10 +1,27 @@
 # dctg-logtalk
-# Definite Clause Translation Grammar
+# Definite Clause Translation Grammar (DCTG)
 
-The major predicates are `dctg::process/2` and `dctg::consult/2`, which
-consults a file of DCTG rules.
+
+## Usage
+
+To load all the files, load the `loader.lgt` file in the main directory.
+
+DCTG files must have a `.dctg` extension and must define the `dctg_main/2`
+predicate where the first argument is the predicate indicator of the main
+DCTG predicate and the second argument is the predicate indicator of the
+evaluation predicate.
+
+The major predicates are `dctg::process/2`, which translates a DCTG rule
+to a clause, and `dctg::consult/2`, which consults a file with DCTG rules.
+
+
+## Debugging
+
+TBD.
+
 
 ## History
+
 This Logtalk implementation of the Definite Clause Translation Grammar is
 based on an implementation created by Lindsey Spratt in December, 1986,
 which in turn was based on the "Definite Clause Translation Grammars" paper
