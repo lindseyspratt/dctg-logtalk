@@ -23,26 +23,26 @@
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-2-14,
+		date is 2022-2-15,
 		comment is 'DCTG expression translation.'
 	]).
 
 	:- protected(t_lp/6).
-	:- mode(t_lp(+expression, -list, -term, -term, -term, -term), one).
+	:- mode(t_lp(+expression, -list, -term, -term, -term, -callable), one).
 	:- info(t_lp/6, [
 		comment is 'Translate the left-hand side of a DCTG expression.',
 		argnames is ['ExpressionHead', 'StL', 'S', 'SR', 'Sem', 'ClauseHead']
 	]).
 
 	:- protected(t_rp/6).
-	:- mode(t_rp(+expression, -list, -list, -term, -term, -evaluable), one).
+	:- mode(t_rp(+expression, -list, -list, -term, -term, -callable), one).
 	:- info(t_rp/6, [
-		comment is 'Translate the left-hand side of a DCTG expression.',
+		comment is 'Translate the right-hand side of a DCTG expression.',
 		argnames is ['ExpressionBody', 'St', 'StR', 'S', 'SR', 'Goal']
 	]).
 
 	:- private(add_extra_args/3).
-	:- mode(add_extra_args(+list, +evaluable, -evaluable), one).
+	:- mode(add_extra_args(+list, +callable, -callable), one).
 	:- info(add_extra_args/3, [
 		comment is 'Extend ``BaseStructure`` functor with "DCTG" and create ``ExtendedStructure`` with extended functor and the concatenation of the base arguments and the ``NewArguments``.',
 		argnames is ['NewArguments', 'BaseStructure', 'ExtendedStructure']
@@ -60,7 +60,7 @@
 		check/3
 	]).
 
-	:- include(operators).
+	:- include(dctg_operators).
 
 	t_lp((LP,List), StL, S, SR, Sem, H) :-
 		!,
