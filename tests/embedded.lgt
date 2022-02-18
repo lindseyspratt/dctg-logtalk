@@ -29,9 +29,7 @@
 	token_ls ::=
 		tokenc ^^ C,
 		token_ls ^^ Cs
-		<:> value([H|T]) ::-
-			C ^^ value(H),
-			Cs ^^ value(T).
+		<:> value([H|T]) ::- C ^^ value(H), Cs ^^ value(T).
 	token_ls ::=
 		[]
 		<:> value([]).
