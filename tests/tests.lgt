@@ -25,8 +25,8 @@
 	extends(lgtunit)).
 
 	:- info([
-		version is 0:3:0,
-		date is 2022-02-15,
+		version is 0:4:0,
+		date is 2022-02-18,
 		author is 'Lindsey Spratt',
 		comment is 'Test cases for the DCTG translator.'
 	]).
@@ -189,12 +189,12 @@
 		proc(([t1], p, [t2] ::= b)).
 
 	% semantic test
-	
+
 	test(dctg_semantics_01, true) :-
 		proc((a ::= [] <:> b)).
 	test(dctg_semantics_02, true) :-
 		proc((a ::= [] <:> b ::- c)).
-	
+
 	test(dctg_example_01, true(V == [a,b,c])) :-
 		file_path('../examples/token.dctg', Path),
 		dctg::consult(Path, Object),
@@ -204,6 +204,14 @@
 		dctg::consult(Path, Object),
 		E = exists(_R56,musician(_R56) & forall(_R140, =>(scientist(_R140) & hesitates(_R140), helps(_R56,_R140)))),
 		Object::evaluate([a,musician,helps,every,scientist,that,hesitates], V).
+
+	% embedding tests
+
+	test(dctg_embed, true(V == [a,b,c])) :-
+		file_path('embedded.lgt', Path),
+		logtalk_load(Path, [hook(dctg)]),
+		% avoid linter warning by using the {}/1 control construct
+		{embedded::evaluate([a,b,c], V)}.
 
 	% auxiliary predicates
 

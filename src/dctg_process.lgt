@@ -25,7 +25,7 @@
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-2-15,
+		date is 2022-2-18,
 		comment is 'Definite Clause Translation Grammar (DCTG), based on the work of Harvey Abramson.'
 	]).
 
@@ -80,7 +80,7 @@
 	*/
 
 	:- uses(list, [
-		append/3, length/2, member/2, reverse/2
+		append/3, length/2, reverse/2
 	]).
 
 	:- uses(logtalk, [
@@ -118,6 +118,16 @@
 	term_expansion(begin_of_file, [(:- object(Object, imports(dctg_evaluate)))]) :-
 		logtalk_load_context(basename, Basename),
 		atom_concat(Object, '.dctg', Basename).
+	term_expansion((:- Directive0), [(:- Directive)]) :-
+		nonvar(Directive0),
+		Directive0 =.. [object, Object| Relations0],
+		add_category_import(Relations0, Relations),
+		Directive =.. [object, Object| Relations].
+	term_expansion((:- Directive0), [(:- Directive)]) :-
+		nonvar(Directive0),
+		Directive0 =.. [category, Object| Relations0],
+		add_category_extend(Relations0, Relations),
+		Directive =.. [category, Object| Relations].
 	term_expansion(dctg_main(Main, Eval), [ParseDirective, EvaluateDirective, ParseClause, EvaluateClause, SemClause]) :-
 		grammar_main_predicate(Main, Eval, ParseIndicator, ParseClause, EvaluateIndicator, EvaluateClause),
 		ParseDirective = (:- public(ParseIndicator)),
@@ -140,7 +150,33 @@
 	term_expansion((LP::=RP), (H:-B)) :-
 		!,
 		process((LP::=RP<:>true), (H:-B)).
-	term_expansion(end_of_file, [(:- end_object), end_of_file]).
+	term_expansion(end_of_file, [(:- end_object), end_of_file]) :-
+		logtalk_load_context(basename, Basename),
+		atom_concat(_, '.dctg', Basename).
+
+	add_category_import([], [imports(dctg_evaluate)]).
+	add_category_import([imports(Imports0)| Relations], [imports(Imports)| Relations]) :-
+		!,
+		add_entity(Imports0, Imports).
+	add_category_import([Relation0| Relations0], [Relation0| Relations]) :-
+		add_category_import(Relations0, Relations).
+
+	add_category_extend([], [extends(dctg_evaluate)]).
+	add_category_extend([extends(Extends0)| Relations], [imports(Extends)| Relations]) :-
+		!,
+		add_entity(Extends0, Extends).
+	add_category_extend([Relation0| Relations0], [Relation0| Relations]) :-
+		add_category_extend(Relations0, Relations).
+
+	add_entity([Entity0| Entities0], [Entity0| Entities]) :-
+		!,
+		add_entity(Entities0, Entities).
+	add_entity([], [dctg_evaluate]) :-
+		!.
+	add_entity((Entity0, Entities0), (Entity0, Entities)) :-
+		!,
+		add_entity(Entities0, Entities).
+	add_entity(Entity, (Entity, dctg_evaluate)).
 
 	/*
 	Create
