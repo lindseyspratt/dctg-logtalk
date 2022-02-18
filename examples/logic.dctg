@@ -62,7 +62,7 @@ verb_phrase ::=
   <:>
   (agree(Num) ::-
      V ^^ agree(Num),
-     N ^^ agree(Num1)),
+     N ^^ agree(Num)),
   (logic(SubjectTerm, Proposition) ::-
      V ^^ logic(transitive, SubjectTerm, ObjectTerm, Predicate),
      N ^^ logic(ObjectTerm, Predicate, Proposition)).
@@ -87,8 +87,8 @@ rel_clause ::=
 rel_clause ::=
   []
   <:>
-  agree(Num),
-  logic(X, P, P).
+  agree(_Num),
+  logic(_X, P, P).
 
 determiner ::=
   [every]
