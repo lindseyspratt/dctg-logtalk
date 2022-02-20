@@ -70,6 +70,8 @@
 		comment is 'Tidy (simplify) the ``InputExpression`` to create the ``OutputExpression``.',
 		argnames is ['InputExpression', 'OutputExpression']
 	]).
+	
+	:- public(grammar_main_predicate/10).
 
 	/*
 	This Logtalk implementation of the Definite Clause Translation Grammar is
@@ -128,10 +130,25 @@
 		Directive0 =.. [category, Object| Relations0],
 		add_category_extend(Relations0, Relations),
 		Directive =.. [category, Object| Relations].
-	term_expansion(dctg_main(Main, Eval), [ParseDirective, EvaluateDirective, ParseClause, EvaluateClause, SemClause]) :-
-		grammar_main_predicate(Main, Eval, ParseIndicator, ParseClause, EvaluateIndicator, EvaluateClause),
-		ParseDirective = (:- public(ParseIndicator)),
-		EvaluateDirective = (:- public(EvaluateIndicator)),
+	term_expansion(dctg_main(Main, Eval), 
+		[ParseDirective1, ParseDirective2, EvaluateDirective1, EvaluateDirective2, 
+		 ParseClause1, ParseClause2, EvaluateClause1, EvaluateClause2, SemClause]) :-
+		grammar_main_predicate(Main, Eval, 
+			ParseIndicator1, ParseClause1, 
+			ParseIndicator2, ParseClause2, 
+			EvaluateIndicator1, EvaluateClause1,
+			EvaluateIndicator2, EvaluateClause2
+			),
+		format('~w -> ~w~n', [dctg_main(Main, Eval), grammar_main_predicate(Main, Eval, 
+			ParseIndicator1, ParseClause1, 
+			ParseIndicator2, ParseClause2, 
+			EvaluateIndicator1, EvaluateClause1,
+			EvaluateIndicator2, EvaluateClause2
+			)]),
+		ParseDirective1 = (:- public(ParseIndicator1)),
+		ParseDirective2 = (:- public(ParseIndicator2)),
+		EvaluateDirective1 = (:- public(EvaluateIndicator1)),
+		EvaluateDirective2 = (:- public(EvaluateIndicator2)),
 		SemClause = (^^(A,B) :- ::eval(A, B)).
 	term_expansion((LP::=[]<:>Sem), H) :-
 		!,
@@ -182,33 +199,60 @@
 	Create
 	parse(Source, ExtraArgs, Tree) :-
 		MainDCTG(ExtraArgs, Tree, Source, []).
+	parse(Source, Remainder, ExtraArgs, Tree) :-
+		MainDCTG(ExtraArgs, Tree, Source, Remainder).
 	evaluate(Source, ExtraArgs, ResultArgs) :-
 		MainDCTG(ExtraArgs, Tree, Source, []),
+		Tree ^^ MainEvaluate(ResultArgs).
+	evaluate(Source, Remainder, ExtraArgs, ResultArgs) :-
+		MainDCTG(ExtraArgs, Tree, Source, Remainder),
 		Tree ^^ MainEvaluate(ResultArgs).
 	where ExtraArgs and ResultArgs are sequences of 0, 1, or more terms,
 	Main, ExtraArgs length, MainEvaluate, and ResultArgs length are specified by dctg_main/2 fact.
 	*/
-	grammar_main_predicate(Main/ExtraArgCount, SemFunctor/SemArgCount,
-			parse/ParseArity, ParseClause,
-			evaluate/EvalArity, EvaluateClause) :-
+	grammar_main_predicate(Main/ExtraArgCount, SemInfo,
+			parse/ParseArity1, ParseClause1,
+			parse/ParseArity2, ParseClause2,
+			evaluate/EvalArity1, EvalClause1,
+			evaluate/EvalArity2, EvalClause2
+			) :-
 		atom_concat(Main, 'DCTG', MainFunctor),
+		MainInfo = MainFunctor/ExtraArgCount,
+		ParsePrefix1 = [parse, Source],
+		ParsePrefix2 = [parse, Source, Remainder],
+		grammar_parse_predicate(MainInfo, Source, [], ParsePrefix1, ParseClause1, ParseArity1),
+		grammar_parse_predicate(MainInfo, Source, Remainder, ParsePrefix2, ParseClause2, ParseArity2),
+
+		EvalPrefix1 = [evaluate, Source],
+		EvalPrefix2 = [evaluate, Source, Remainder],
+		grammar_evaluate_predicate(MainInfo, Source, [], EvalPrefix1, SemInfo, EvalClause1, EvalArity1),
+		grammar_evaluate_predicate(MainInfo, Source, Remainder, EvalPrefix2, SemInfo, EvalClause2, EvalArity2).
+
+	grammar_parse_predicate(MainFunctor/ExtraArgCount, Source, Remainder, ParsePrefix, ParseClause, ParseArity) :-
 		length(ExtraArgs, ExtraArgCount),
-		MainPrefix = [MainFunctor| ExtraArgs],
-		append(MainPrefix, [Tree, Source, []], MainList),
-		MainHead =.. MainList,
-		ParsePrefix = [parse, Source| ExtraArgs],
-		append(ParsePrefix, [Tree], ParseList),
-		ParseHead =.. ParseList,
-		functor(ParseHead, _, ParseArity),
-		ParseClause = (ParseHead :- MainHead),
+		grammar_main_head(MainFunctor, ExtraArgs, Tree, Source, Remainder, MainHead),
+		grammar_clause_head(ParsePrefix, ExtraArgs, [Tree], ParseHead, ParseArity),
+		ParseClause = (ParseHead :- MainHead).
+
+	grammar_evaluate_predicate(MainFunctor/ExtraArgCount, Source, Remainder, EvalPrefix, SemFunctor/SemArgCount, EvalClause, EvalArity) :-
+		length(ExtraArgs, ExtraArgCount),
+		grammar_main_head(MainFunctor, ExtraArgs, Tree, Source, Remainder, MainHead),
 		length(SemArgs, SemArgCount),
 		SemHead =.. [SemFunctor|SemArgs],
-		EvalPrefix = [evaluate, Source| ExtraArgs],
-		append(EvalPrefix, SemArgs, EvalList),
-		EvaluateHead =.. EvalList,
-		functor(EvaluateHead, _, EvalArity),
-		EvaluateClause = (EvaluateHead :- MainHead, ::eval(Tree, SemHead)).
+		grammar_clause_head(EvalPrefix, ExtraArgs, SemArgs, EvalHead, EvalArity),
+		EvalClause = (EvalHead :- MainHead, ::eval(Tree, SemHead)).
 
+	grammar_main_head(MainFunctor, ExtraArgs, Tree, Source, Remainder, MainHead) :-
+		MainPrefix = [MainFunctor| ExtraArgs],
+		append(MainPrefix, [Tree, Source, Remainder], MainList),
+		MainHead =.. MainList.
+
+	grammar_clause_head(HeadPrefix, ExtraArgs, FinalArgs, Head, Arity) :-
+		append(HeadPrefix, ExtraArgs, ExtendedPrefix),
+		append(ExtendedPrefix, FinalArgs, HeadList),
+		Head =.. HeadList,
+		functor(Head, _, Arity).
+		
 /*	sentence(Source) :-
 		sentenceDCTG(T, Source, []),
 		::dctg_print_tree(T),

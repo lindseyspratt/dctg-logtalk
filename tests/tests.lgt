@@ -204,14 +204,23 @@
 		dctg::consult(Path, Object),
 		E = exists(M, musician(M) & forall(S, (scientist(S) & hesitates(S)) => helps(M,S))),
 		Object::evaluate([a,musician,helps,every,scientist,that,hesitates], V).
+	test(dctg_example_03, true((R == [], V == [a,b,c]))) :-
+		file_path('../examples/token.dctg', Path),
+		dctg::consult(Path, Object),
+		Object::evaluate([a,b,c], R, V).
 
 	% embedding tests
 
-	test(dctg_embed, true(V == [a,b,c])) :-
+	test(dctg_embed_01, true(V == [a,b,c])) :-
 		file_path('embedded.lgt', Path),
 		logtalk_load(Path, [hook(dctg)]),
 		% avoid linter warning on unknown object by using the {}/1 control construct
 		{embedded::evaluate([a,b,c], V)}.
+	test(dctg_embed_02, true((R == [], V == [a,b,c]))) :-
+		file_path('embedded.lgt', Path),
+		logtalk_load(Path, [hook(dctg)]),
+		% avoid linter warning on unknown object by using the {}/1 control construct
+		{embedded::evaluate([a,b,c], R, V)}.
 
 	% auxiliary predicates
 
