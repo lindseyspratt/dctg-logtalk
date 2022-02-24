@@ -24,7 +24,7 @@
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-2-14,
+		date is 2022-02-14,
 		comment is 'DCTG evaluate semantics.'
 	]).
 
@@ -63,7 +63,7 @@
 	:- include(dctg_operators).
 
 	^^(Node, Args) :- eval(Node, Args).
-	
+
 	eval(node(Name, _, Sem), Args) :-
 		trace_node_message('call', 'fail', Name, Sem, Args),
 		context(Context),
@@ -72,7 +72,7 @@
 		trace_node_message('exit', 'redo', Name, Sem, Args).
 
 	:- meta_predicate(dctg_eval(*,*)).
-	
+
 	dctg_eval(((Args ::- Traverse), _Rules), Args) :-
 		!,
 		trace_message('call', 'fail', Args, Traverse),
