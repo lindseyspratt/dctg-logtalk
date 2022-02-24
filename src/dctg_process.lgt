@@ -70,7 +70,7 @@
 		comment is 'Tidy (simplify) the ``InputExpression`` to create the ``OutputExpression``.',
 		argnames is ['InputExpression', 'OutputExpression']
 	]).
-	
+
 	:- public(grammar_main_predicate/10).
 
 	/*
@@ -81,21 +81,11 @@
 	IEEE, Atlantic City, New Jersey, February 1984.
 	*/
 
-	:- uses(list, [
-		append/3, length/2, reverse/2
-	]).
-
-	:- uses(logtalk, [
-		print_message(debug, dctg, Message) as dbg(Message)
-	]).
-
-	:- uses(os, [
-		decompose_file_name/4
-	]).
-
-	:- uses(user, [
-		atomic_list_concat/2
-	]).
+	:- uses(format, [format/2]).
+	:- uses(list, [append/3, length/2, reverse/2]).
+	:- uses(logtalk, [print_message(debug, dctg, Message) as dbg(Message)]).
+	:- uses(os, [decompose_file_name/4]).
+	:- uses(user, [atomic_list_concat/2]).
 
 	:- include(dctg_operators).
 
@@ -134,18 +124,18 @@
 		Directive0 =.. [category, Object| Relations0],
 		add_category_extend(Relations0, Relations),
 		Directive =.. [category, Object| Relations].
-	term_expansion(dctg_main(Main, Eval), 
-		[ParseDirective1, ParseDirective2, EvaluateDirective1, EvaluateDirective2, 
+	term_expansion(dctg_main(Main, Eval),
+		[ParseDirective1, ParseDirective2, EvaluateDirective1, EvaluateDirective2,
 		 ParseClause1, ParseClause2, EvaluateClause1, EvaluateClause2, SemClause]) :-
-		grammar_main_predicate(Main, Eval, 
-			ParseIndicator1, ParseClause1, 
-			ParseIndicator2, ParseClause2, 
+		grammar_main_predicate(Main, Eval,
+			ParseIndicator1, ParseClause1,
+			ParseIndicator2, ParseClause2,
 			EvaluateIndicator1, EvaluateClause1,
 			EvaluateIndicator2, EvaluateClause2
 			),
-		format('~w -> ~w~n', [dctg_main(Main, Eval), grammar_main_predicate(Main, Eval, 
-			ParseIndicator1, ParseClause1, 
-			ParseIndicator2, ParseClause2, 
+		format('~w -> ~w~n', [dctg_main(Main, Eval), grammar_main_predicate(Main, Eval,
+			ParseIndicator1, ParseClause1,
+			ParseIndicator2, ParseClause2,
 			EvaluateIndicator1, EvaluateClause1,
 			EvaluateIndicator2, EvaluateClause2
 			)]),
@@ -256,7 +246,7 @@
 		append(ExtendedPrefix, FinalArgs, HeadList),
 		Head =.. HeadList,
 		functor(Head, _, Arity).
-		
+
 /*	sentence(Source) :-
 		sentenceDCTG(T, Source, []),
 		::dctg_print_tree(T),
