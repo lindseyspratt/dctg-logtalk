@@ -23,7 +23,7 @@
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-2-15,
+		date is 2022-02-15,
 		comment is 'DCTG expression translation.'
 	]).
 

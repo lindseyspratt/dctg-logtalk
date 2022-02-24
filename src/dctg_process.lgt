@@ -25,7 +25,7 @@
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-2-18,
+		date is 2022-02-24,
 		comment is 'Definite Clause Translation Grammar (DCTG), based on the work of Harvey Abramson.'
 	]).
 
@@ -89,6 +89,10 @@
 
 	:- uses(os, [
 		decompose_file_name/4
+	]).
+
+	:- uses(user, [
+		atomic_list_concat/2
 	]).
 
 	:- include(dctg_operators).
