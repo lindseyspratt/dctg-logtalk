@@ -23,7 +23,7 @@
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-02-14,
+		date is 2022-02-28,
 		comment is 'DCTG Print Tree.'
 	]).
 
@@ -49,6 +49,10 @@
 	]).
 
 	:- include(dctg_operators).
+
+	:- uses(format, [
+		format/2
+	]).
 
 	print_tree(Tree) :-
 		print_tree(Tree, 0).
@@ -97,7 +101,7 @@
 		print_children(OtherNodes, Indent).
 	print_children(X, _I) :-
 		functor(X, F, N),
-		writeseqnl(['Unable to print term with functor "', F, '"and arity', N, '.']),
+		format('Unable to print term with functor ~q and arity ~d~n.', [F, N]),
 		throw(error(type_error(node, X), print_children/2)).
 
 	% auxiliary predicates
@@ -107,10 +111,5 @@
 		write(' '),
 		K is N-1,
 		tab(K).
-
-	writeseqnl([]) :- nl.
-	writeseqnl([H|T]) :-
-		write(H),
-		writeseqnl(T).
 
 :- end_category.
