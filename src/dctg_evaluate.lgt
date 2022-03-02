@@ -75,15 +75,16 @@
 
 	dctg_eval(((Args ::- Traverse), _Rules), Args) :-
 		!,
-		trace_message('call', 'fail', Args, Traverse),
-		call(Traverse),
-		trace_message('exit', 'redo', Args, Traverse).
-	dctg_eval((Args, _Rules), Args) :- !.
+		dctg_eval((Args ::- Traverse), Args).
+	dctg_eval((Args, _Rules), Args) :-
+		!.
 	dctg_eval((_, Rules), Args) :-
 		dctg_eval(Rules, Args).
 	dctg_eval((Args ::- Traverse), Args) :-
+		!,
+		this(This),
 		trace_message('call', 'fail', Args, Traverse),
-		call(Traverse),
+		This::Traverse,
 		trace_message('exit', 'redo', Args, Traverse).
 	dctg_eval(Args, Args).
 
@@ -104,18 +105,18 @@
 	*/
 
 	trace_node_message(Success, Failure, Name, Sem, Args) :-
-		traced_attachment(Args)
-			-> (	nl,
+		(	traced_attachment(Args)
+		->	(	nl,
 				write(Success), write(' '),
 				trace_node_message1(Name, Sem, Args)
-			;
-				nl,
+			;	nl,
 				write(Failure), write(' '),
 				trace_node_message1(Name, Sem, Args),
 				!,
 				fail
 			 )
-		; true.
+		;	true
+		).
 
 
 	trace_node_message1(Name, Sem, Args) :-
