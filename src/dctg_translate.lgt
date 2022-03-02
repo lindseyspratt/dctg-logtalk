@@ -27,11 +27,11 @@
 		comment is 'DCTG expression translation.'
 	]).
 
-	:- protected(t_lp/6).
-	:- mode(t_lp(+expression, -list, -term, -term, -term, -callable), one).
-	:- info(t_lp/6, [
+	:- protected(t_lp/7).
+	:- mode(t_lp(+expression, -list, -term, -term, -term, -callable, -list), one).
+	:- info(t_lp/7, [
 		comment is 'Translate the left-hand side of a DCTG expression.',
-		argnames is ['ExpressionHead', 'StL', 'S', 'SR', 'Sem', 'ClauseHead']
+		argnames is ['ExpressionHead', 'StL', 'S', 'SR', 'Sem', 'ClauseHead', 'AuxiliaryClauses']
 	]).
 
 	:- protected(t_rp/6).
@@ -48,6 +48,9 @@
 		argnames is ['NewArguments', 'BaseStructure', 'ExtendedStructure']
 	]).
 
+	:- private(clause_id_/1).
+	:- dynamic(clause_id_/1).
+
 	:- uses(list, [
 		append/3
 	]).
@@ -62,15 +65,19 @@
 
 	:- include(dctg_operators).
 
-	t_lp((LP,List), StL, S, SR, Sem, H) :-
+	t_lp((LP,List), StL, S, SR, Sem, H, Clauses) :-
 		!,
 		context(Context),
 		check(list, List, Context),
 		append(List, SR, List2),
-		add_extra_args([node(LP, StL, Sem), S, List2], LP, H).
-	t_lp(LP, StL, S, SR, Sem, H) :-
-		add_extra_args([node(LP, StL, Sem), S, SR], LP, H).
-
+		t_clause_id(ID),
+		t_sem(Sem, ID, TSem, Clauses, []),
+		add_extra_args([node(LP, StL, TSem), S, List2], LP, H).
+	t_lp(LP, StL, S, SR, Sem, H, Clauses) :-
+		t_clause_id(ID),
+		t_sem(Sem, ID, TSem, Clauses, []),
+		add_extra_args([node(LP, StL, TSem), S, SR], LP, H).
+	
 	t_rp(!, St, St, S, S, !) :- !.
 	t_rp([], St, [[]|St], S, S1, S=S1) :- !.
 	t_rp([X], St, [[NX]|St], S, SR, S = [X| SR]) :-
@@ -119,6 +126,54 @@
 		add_extra_args([St1, S, SR], T, Tt).
 
 	% auxiliary predicates
+	
+	% Semantics translation converts (a ::- X^^b, Y^^c, d) to 
+	% (a ::- dctg_sem(1, a, [X,Y])) and (dctg_sem(1, a, [X,Y]) :- X^^b, Y^^c, d).
+	% The X and Y are node variables that refer to nonterminal nodes in the DCTG clause being translated.
+	% The clause is compiled as Logtalk source in the current dctg object being compiled.
+	
+	t_sem((A,B), ID, (ASem,BSem)) -->
+		!,
+		t_sem(A, ID, ASem),
+		t_sem(B, ID, BSem).
+	t_sem((H ::- B), ID, Sem) -->
+		!,
+		[CH1, CH2],
+		{t_sem_body(H, B, ID, Sem, [CH1, CH2])}.
+	t_sem(H, _, H) --> [].
+
+	t_sem_body(H, B, ClauseID, (H ::- Entity::DCTGSem), [(:- private(Functor/2)), (DCTGSem :- B)]) :-
+		{atomic_concat(dctg_sem, ClauseID, Functor)},
+		logtalk_load_context(entity_identifier, Entity),
+		DCTGSem =.. [Functor, H, Nodes],
+		find_nodes(B, NodesRaw, []),
+		sort(NodesRaw, Nodes). % NodesRaw may have duplicate references to nodes, sort uniquifies the list.
+	
+	t_clause_id(New) :-
+		(retract(clause_id_(Old))
+		 -> New is Old + 1
+		;
+		New = 1
+		),
+		assertz(clause_id_(New)).
+	
+	find_nodes((A,B)) -->
+		find_nodes(A),
+		find_nodes(B).
+	find_nodes(B, N, T) :-
+		B =.. [F|Args],
+		(F = (^^),
+		Args = [Node,_]
+		  -> N = [Node|T]
+		;
+		find_nodes_list(Args, N, T)
+		).
+	
+	find_nodes_list([]) --> [].
+	find_nodes_list([H|T]) -->
+		find_nodes(H),
+		find_nodes_list(T).
+		
 
 	add_extra_args(L, T, T1) :-
 		T =.. [F|Tlist],

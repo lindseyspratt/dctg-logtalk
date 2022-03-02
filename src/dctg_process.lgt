@@ -133,34 +133,35 @@
 			EvaluateIndicator1, EvaluateClause1,
 			EvaluateIndicator2, EvaluateClause2
 			),
-		format('~w -> ~w~n', [dctg_main(Main, Eval), grammar_main_predicate(Main, Eval,
-			ParseIndicator1, ParseClause1,
-			ParseIndicator2, ParseClause2,
-			EvaluateIndicator1, EvaluateClause1,
-			EvaluateIndicator2, EvaluateClause2
-			)]),
+%		format('~w -> ~w~n', [dctg_main(Main, Eval), grammar_main_predicate(Main, Eval,
+%			ParseIndicator1, ParseClause1,
+%			ParseIndicator2, ParseClause2,
+%			EvaluateIndicator1, EvaluateClause1,
+%			EvaluateIndicator2, EvaluateClause2
+%			)]),
 		ParseDirective1 = (:- public(ParseIndicator1)),
 		ParseDirective2 = (:- public(ParseIndicator2)),
 		EvaluateDirective1 = (:- public(EvaluateIndicator1)),
 		EvaluateDirective2 = (:- public(EvaluateIndicator2)),
 		SemClause = (^^(A,B) :- ::eval(A, B)).
-	term_expansion((LP::=[]<:>Sem), H) :-
+	term_expansion((LP::=[]<:>Sem), [H|Clauses]) :-
 		!,
-		^^t_lp(LP, [], S, S, Sem, H).
+		^^t_lp(LP, [], S, S, Sem, H, Clauses).
 	term_expansion((LP::=[]), H) :-
 		!,
-		^^t_lp(LP, [], S, S, true, H).
-	term_expansion((LP::=RP<:>Sem), (H:-B)) :-
+		^^t_lp(LP, [], S, S, true, H, []).
+	term_expansion((LP::=RP<:>Sem), [(:-discontiguous(F/A)),(H:-B)|Clauses]) :-
 		!,
 		dbg('  Process 3: ~w'+[rp(RP)]),
 		^^t_rp(RP, [], StL, S, SR, B1),
 		reverse(StL, RStL),
 		dbg('  Process 3: ~w'+[lp(LP, RStL, S, SR)]),
-		^^t_lp(LP, RStL, S, SR, Sem, H),
+		^^t_lp(LP, RStL, S, SR, Sem, H, Clauses),
+		functor(H, F, A),
 		tidy(B1, B).
-	term_expansion((LP::=RP), (H:-B)) :-
+	term_expansion((LP::=RP), Result) :-
 		!,
-		process((LP::=RP<:>true), (H:-B)).
+		term_expansion((LP::=RP<:>true), Result).
 	term_expansion(end_of_file, [(:- end_object), end_of_file]) :-
 		logtalk_load_context(basename, Basename),
 		atom_concat(_, '.dctg', Basename).
