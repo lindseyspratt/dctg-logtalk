@@ -23,7 +23,7 @@
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-02-15,
+		date is 2022-03-02,
 		comment is 'DCTG expression translation.'
 	]).
 
@@ -51,17 +51,10 @@
 	:- private(clause_id_/1).
 	:- dynamic(clause_id_/1).
 
-	:- uses(list, [
-		append/3
-	]).
-	
-	:- uses(logtalk, [
-		print_message(debug, dctg, Message) as dbg(Message)
-	]).
-
-	:- uses(type, [
-		check/3
-	]).
+	:- uses(list, [append/3]).
+	:- uses(logtalk, [print_message(debug, dctg, Message) as dbg(Message)]).
+	:- uses(type, [check/3]).
+	:- uses(user, [atomic_concat/3]).
 
 	:- include(dctg_operators).
 
@@ -77,7 +70,7 @@
 		t_clause_id(ID),
 		t_sem(Sem, ID, TSem, Clauses, []),
 		add_extra_args([node(LP, StL, TSem), S, SR], LP, H).
-	
+
 	t_rp(!, St, St, S, S, !) :- !.
 	t_rp([], St, [[]|St], S, S1, S=S1) :- !.
 	t_rp([X], St, [[NX]|St], S, SR, S = [X| SR]) :-
@@ -100,7 +93,7 @@
 		context(Context),
 		check(list_or_partial_list, R, Context),
 		t_rp(R, St, [NR|St], SR1, SR, RB).
-	t_rp({T}, St, St, S, S, T) :- 
+	t_rp({T}, St, St, S, S, T) :-
 		!,
 		context(Context),
 		check(callable, T, Context).
@@ -126,12 +119,12 @@
 		add_extra_args([St1, S, SR], T, Tt).
 
 	% auxiliary predicates
-	
-	% Semantics translation converts (a ::- X^^b, Y^^c, d) to 
+
+	% Semantics translation converts (a ::- X^^b, Y^^c, d) to
 	% (a ::- dctg_sem(1, a, [X,Y])) and (dctg_sem(1, a, [X,Y]) :- X^^b, Y^^c, d).
 	% The X and Y are node variables that refer to nonterminal nodes in the DCTG clause being translated.
 	% The clause is compiled as Logtalk source in the current dctg object being compiled.
-	
+
 	t_sem((A,B), ID, (ASem,BSem)) -->
 		!,
 		t_sem(A, ID, ASem),
@@ -142,21 +135,19 @@
 		{t_sem_body(H, B, ID, Sem, [CH1, CH2])}.
 	t_sem(H, _, H) --> [].
 
-	t_sem_body(H, B, ClauseID, (H ::- Entity::DCTGSem), [(:- private(Functor/2)), (DCTGSem :- B)]) :-
-		{atomic_concat(dctg_sem, ClauseID, Functor)},
-		logtalk_load_context(entity_identifier, Entity),
+	t_sem_body(H, B, ClauseID, (H ::- DCTGSem), [(:- private(Functor/2)), (DCTGSem :- B)]) :-
+		atomic_concat(dctg_sem, ClauseID, Functor),
 		DCTGSem =.. [Functor, H, Nodes],
 		find_nodes(B, NodesRaw, []),
 		sort(NodesRaw, Nodes). % NodesRaw may have duplicate references to nodes, sort uniquifies the list.
-	
+
 	t_clause_id(New) :-
-		(retract(clause_id_(Old))
-		 -> New is Old + 1
-		;
-		New = 1
+		(	retract(clause_id_(Old))
+		->	New is Old + 1
+		;	New = 1
 		),
 		assertz(clause_id_(New)).
-	
+
 	find_nodes((A,B)) -->
 		find_nodes(A),
 		find_nodes(B).
@@ -168,12 +159,12 @@
 		;
 		find_nodes_list(Args, N, T)
 		).
-	
+
 	find_nodes_list([]) --> [].
 	find_nodes_list([H|T]) -->
 		find_nodes(H),
 		find_nodes_list(T).
-		
+
 
 	add_extra_args(L, T, T1) :-
 		T =.. [F|Tlist],

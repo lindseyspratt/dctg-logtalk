@@ -2,6 +2,16 @@
 # Definite Clause Translation Grammar (DCTG)
 
 
+Definite Clause Translation Grammar rules (DCTGs) are represented as:
+
+	LeftPart ::= RightPart <:> Attributes ::- Semantics.
+
+In this term, `LeftPart ::= RightPart` represents syntax while
+`Attributes ::- Semantics` represents semantics. As in DCGs, `LeftPart`
+can either be a non-terminal possibly followed by a list of terminals
+(aka a "push-back" list).
+
+
 ## Usage
 
 To load all the files, load the `loader.lgt` file in the main directory.

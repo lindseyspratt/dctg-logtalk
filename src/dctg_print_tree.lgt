@@ -63,7 +63,7 @@
 		print_node(Name, Sem),
 		NextIndent is Indent + 2,
 		print_children(Children, NextIndent).
-		print_tree(Terminal, Indent) :-
+	print_tree(Terminal, Indent) :-
 		tab(Indent),
 		write(Terminal), nl.
 
