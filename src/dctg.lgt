@@ -30,23 +30,23 @@
 	]).
 
 	:- public(load/2).
-	:- mode(load(+atom, --object_identifier), one).
+	:- mode(load(+atom, --object_identifier), zero_or_one).
 	:- info(load/2, [
-		comment is 'Loads a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file.',
+		comment is 'Loads a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file. Fails if the file is not readable or if the compilation of the grammar fails.',
 		argnames is ['File', 'GrammarObject']
 	]).
 
 	:- public(load/1).
-	:- mode(load(+atom), one).
+	:- mode(load(+atom), zero_or_one).
 	:- info(load/1, [
-		comment is 'Loads a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file.',
+		comment is 'Loads a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file. Fails if the file is not readable or if the compilation of the grammar fails.',
 		argnames is ['File']
 	]).
 
 	:- public(compile/1).
-	:- mode(compile(+atom), one).
+	:- mode(compile(+atom), zero_or_one).
 	:- info(compile/1, [
-		comment is 'Compiles a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) to a Logalk file written to the same directory and defining a ``GrammarObject`` object named after the file.',
+		comment is 'Compiles a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) to a Logalk file written to the same directory and defining a ``GrammarObject`` object named after the file. Fails if the file is not readable or if the compilation of the grammar fails.',
 		argnames is ['File']
 	]).
 
@@ -80,7 +80,6 @@
 	IEEE, Atlantic City, New Jersey, February 1984.
 	*/
 
-	:- uses(format, [format/2]).
 	:- uses(list, [append/3, length/2, reverse/2]).
 	:- uses(logtalk, [print_message(debug, dctg, Message) as dbg(Message)]).
 	:- uses(os, [decompose_file_name/4]).
@@ -99,10 +98,13 @@
 	compile(Path) :-
 		decompose_file_name(Path, Directory, Name, '.dctg'),
 		atomic_list_concat([Directory, Name, '.lgt'], Output),
-		open(Output, write, Stream),
 		this(This),
-		logtalk_compile(Path, [hook(hook_pipeline([This,write_to_stream_hook(Stream,[quoted(true)])]))]),
-		close(Stream).
+		open(Output, write, Stream),
+		(	logtalk_compile(Path, [hook(hook_pipeline([This,write_to_stream_hook(Stream,[quoted(true)])]))]) ->
+			close(Stream)
+		;	close(Stream),
+			fail
+		).
 
 	term_expansion(Term, _) :-
 		dbg('Consuming ~q'+[Term]),

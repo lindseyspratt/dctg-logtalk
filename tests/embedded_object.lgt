@@ -18,22 +18,27 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-:- initialization((
-	set_logtalk_flag(report, warnings),
-	logtalk_load(basic_types(loader)),
-	logtalk_load(format(loader)),
-	logtalk_load(os(loader)),
-	logtalk_load(hook_flows(hook_pipeline), [optimize(on)]),
-	logtalk_load(hook_objects(write_to_stream_hook), [optimize(on)]),
-	logtalk_load([
-		'../src/dctg_print_tree',
-		'../src/dctg_translate',
-		'../src/dctg_evaluate',
-		'../src/dctg'
-	], [
-		source_data(on), debug(on)
-	]),
-	logtalk_load(lgtunit(loader)),
-	logtalk_load(tests, [hook(lgtunit)]),
-	tests::run
-)).
+:- object(embedded_object).
+
+	dctg_main(token/0, value/1).
+
+	token ::=
+		token_ls ^^ T
+		<:> value(V) ::- T ^^ value(V).
+
+	token_ls ::=
+		tokenc ^^ C,
+		token_ls ^^ Cs
+		<:> value([H|T]) ::- C ^^ value(H), Cs ^^ value(T).
+	token_ls ::=
+		[]
+		<:> value([]).
+
+	tokenc ::=
+		[X],
+		{token_char(X)}
+		<:> value(X).
+
+	token_char(_).
+
+:- end_object.
