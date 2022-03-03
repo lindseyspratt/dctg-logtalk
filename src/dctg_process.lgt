@@ -30,7 +30,7 @@
 	]).
 
 	:- public(load/2).
-	:- mode(load(+atom, -atom), one).
+	:- mode(load(+atom, --object_identifier), one).
 	:- info(load/2, [
 		comment is 'Loads a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file.',
 		argnames is ['File', 'GrammarObject']

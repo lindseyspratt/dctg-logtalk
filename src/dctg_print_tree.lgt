@@ -30,21 +30,21 @@
 	:- public(print_tree/1).
 	:- mode(print_tree(+tree), one).
 	:- info(print_tree/1, [
-		comment is 'Print a DCTG tree.',
-		argnames is ['DCTGTree']
+		comment is 'Prints a DCTG tree.',
+		argnames is ['Tree']
 	]).
 
 	:- public(print_node/2).
 	:- mode(print_node(+term, +term), one).
 	:- info(print_node/2, [
-		comment is 'Print ``Name`` and ``Semantics`` from a DCTG node.',
+		comment is 'Prints ``Name`` and ``Semantics`` from a DCTG node.',
 		argnames is ['Name', 'Semantics']
 	]).
 
 	:- public(print_semantics/1).
 	:- mode(print_semantics(+term), one).
 	:- info(print_semantics/1, [
-		comment is 'Print ``DCTGSemantics`` from a DCTG tree node.',
+		comment is 'Prints ``DCTGSemantics`` from a DCTG tree node.',
 		argnames is ['DCTGSemantics']
 	]).
 
@@ -57,10 +57,10 @@
 	print_tree(Tree) :-
 		print_tree(Tree, 0).
 
-	print_tree(node(Name, Children, Sem), Indent) :-
+	print_tree(node(Name, Children, Semantics), Indent) :-
 		!,
 		tab(Indent),
-		print_node(Name, Sem),
+		print_node(Name, Semantics),
 		NextIndent is Indent + 2,
 		print_children(Children, NextIndent).
 	print_tree(Terminal, Indent) :-
@@ -81,7 +81,7 @@
 		print_rule(Rule),
 		tab(1),
 		print_semantics(OtherRules).
-		print_semantics(Rule) :-
+	print_semantics(Rule) :-
 		print_rule(Rule).
 
 	print_rule((Head ::- _)) :-
@@ -94,11 +94,12 @@
 		%Rule =.. [Functor|_],
 		write(Functor).
 
-	print_children([], _) :- !.
-	print_children([Node|OtherNodes], Indent) :-
+	print_children([], _) :-
+		!.
+	print_children([Node| Nodes], Indent) :-
 		!,
 		print_tree(Node, Indent),
-		print_children(OtherNodes, Indent).
+		print_children(Nodes, Indent).
 	print_children(X, _I) :-
 		functor(X, F, N),
 		format('Unable to print term with functor ~q and arity ~d~n.', [F, N]),
