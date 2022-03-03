@@ -64,11 +64,11 @@
 		check(list, List, Context),
 		append(List, SR, List2),
 		t_clause_id(ID),
-		t_sem(Sem, ID, TSem, Clauses, []),
+		phrase(t_sem(Sem, ID, TSem), Clauses),
 		add_extra_args([node(LP, StL, TSem), S, List2], LP, H).
 	t_lp(LP, StL, S, SR, Sem, H, Clauses) :-
 		t_clause_id(ID),
-		t_sem(Sem, ID, TSem, Clauses, []),
+		phrase(t_sem(Sem, ID, TSem), Clauses),
 		add_extra_args([node(LP, StL, TSem), S, SR], LP, H).
 
 	t_rp(!, St, St, S, S, !) :- !.
@@ -133,12 +133,13 @@
 		!,
 		[CH1, CH2],
 		{t_sem_body(H, B, ID, Sem, [CH1, CH2])}.
-	t_sem(H, _, H) --> [].
+	t_sem(H, _, H) -->
+		[].
 
-	t_sem_body(H, B, ClauseID, (H ::- DCTGSem), [(:- private(Functor/2)), (DCTGSem :- B)]) :-
+	t_sem_body(H, B, ClauseID, (H ::- ::DCTGSem), [(:- private(Functor/2)), (DCTGSem :- B)]) :-
 		atomic_concat(dctg_sem, ClauseID, Functor),
 		DCTGSem =.. [Functor, H, Nodes],
-		find_nodes(B, NodesRaw, []),
+		phrase(find_nodes(B), NodesRaw),
 		sort(NodesRaw, Nodes). % NodesRaw may have duplicate references to nodes, sort uniquifies the list.
 
 	t_clause_id(New) :-
@@ -153,18 +154,17 @@
 		find_nodes(B).
 	find_nodes(B, N, T) :-
 		B =.. [F|Args],
-		(F = (^^),
-		Args = [Node,_]
-		  -> N = [Node|T]
-		;
-		find_nodes_list(Args, N, T)
+		(	F = (^^),
+			Args = [Node,_]
+		->	N = [Node|T]
+		;	find_nodes_list(Args, N, T)
 		).
 
-	find_nodes_list([]) --> [].
+	find_nodes_list([]) -->
+		[].
 	find_nodes_list([H|T]) -->
 		find_nodes(H),
 		find_nodes_list(T).
-
 
 	add_extra_args(L, T, T1) :-
 		T =.. [F|Tlist],

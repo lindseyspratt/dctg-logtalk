@@ -133,12 +133,12 @@
 			EvaluateIndicator1, EvaluateClause1,
 			EvaluateIndicator2, EvaluateClause2
 			),
-%		format('~w -> ~w~n', [dctg_main(Main, Eval), grammar_main_predicate(Main, Eval,
-%			ParseIndicator1, ParseClause1,
-%			ParseIndicator2, ParseClause2,
-%			EvaluateIndicator1, EvaluateClause1,
-%			EvaluateIndicator2, EvaluateClause2
-%			)]),
+		dbg('~w -> ~w~n'+[dctg_main(Main, Eval), grammar_main_predicate(Main, Eval,
+			ParseIndicator1, ParseClause1,
+			ParseIndicator2, ParseClause2,
+			EvaluateIndicator1, EvaluateClause1,
+			EvaluateIndicator2, EvaluateClause2
+		)]),
 		ParseDirective1 = (:- public(ParseIndicator1)),
 		ParseDirective2 = (:- public(ParseIndicator2)),
 		EvaluateDirective1 = (:- public(EvaluateIndicator1)),

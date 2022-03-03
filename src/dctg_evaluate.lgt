@@ -82,9 +82,8 @@
 		dctg_eval(Rules, Args).
 	dctg_eval((Args ::- Traverse), Args) :-
 		!,
-		this(This),
 		trace_message('call', 'fail', Args, Traverse),
-		This::Traverse,
+		call(Traverse),
 		trace_message('exit', 'redo', Args, Traverse).
 	dctg_eval(Args, Args).
 
