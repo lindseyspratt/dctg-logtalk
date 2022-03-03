@@ -25,20 +25,20 @@
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
 		date is 2022-02-14,
-		comment is 'DCTG evaluate semantics.'
+		comment is 'DCTG evaluate semantics predicates.'
 	]).
 
 	:- public((^^)/2).
 	:- mode(^^(+term, +term), one_or_more).
 	:- info((^^)/2, [
-		comment is 'The ^^ predicate evaluates the DCTG semantic Goals to with respect to the DCTG Tree semantics.',
+		comment is 'Evaluates the DCTG semantic Goals with respect to the DCTG Tree semantics.',
 		argnames is ['Tree', 'Goals']
 	]).
 
 	:- public((eval)/2).
 	:- mode(eval(+term, +term), one_or_more).
 	:- info((eval)/2, [
-		comment is 'The eval predicate evaluates the DCTG semantic Goals to with respect to the DCTG Tree semantics.',
+		comment is 'Evaluates the DCTG semantic Goals to with respect to the DCTG Tree semantics.',
 		argnames is ['Tree', 'Goals']
 	]).
 
@@ -82,9 +82,8 @@
 		dctg_eval(Rules, Args).
 	dctg_eval((Args ::- Traverse), Args) :-
 		!,
-		this(This),
 		trace_message('call', 'fail', Args, Traverse),
-		This::Traverse,
+		call(Traverse),
 		trace_message('exit', 'redo', Args, Traverse).
 	dctg_eval(Args, Args).
 
@@ -127,14 +126,14 @@
 		^^print_node(Name, Sem).
 
 
-	trace_message(_Success,_Failure,Args,_Body) :-
+	trace_message(_Success, _Failure, Args, _Body) :-
 		\+ traced_attachment(Args),
 		!.
-	trace_message(Success,_Failure,_Args,Body) :-
+	trace_message(Success, _Failure, _Args, Body) :-
 		write(Success), write(' '),
 		^^print_semantics(Body),
 		nl.
-	trace_message(_Success, Failure, _Args,Body) :-
+	trace_message(_Success, Failure, _Args, Body) :-
 		write(Failure), write(' '),
 		^^print_semantics(Body),
 		nl,

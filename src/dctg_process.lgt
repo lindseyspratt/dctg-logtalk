@@ -25,28 +25,21 @@
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-02-24,
+		date is 2022-02-03,
 		comment is 'Definite Clause Translation Grammar (DCTG), based on the work of Harvey Abramson.'
 	]).
 
-	:- public(process/2).
-	:- mode(process(+evaluable, -clause), one).
-	:- info(process/2, [
-		comment is 'Process a Definite Clause Translation Grammar expression to create a Prolog clause that implements the expression.',
-		argnames is ['DCTGExpression', 'Clause']
-	]).
-
-	:- public(consult/2).
-	:- mode(consult(+atom, -atom), one).
-	:- info(consult/2, [
-		comment is 'Consults a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file.',
+	:- public(load/2).
+	:- mode(load(+atom, --object_identifier), one).
+	:- info(load/2, [
+		comment is 'Loads a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file.',
 		argnames is ['File', 'GrammarObject']
 	]).
 
-	:- public(consult/1).
-	:- mode(consult(+atom), one).
-	:- info(consult/1, [
-		comment is 'Consults a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file.',
+	:- public(load/1).
+	:- mode(load(+atom), one).
+	:- info(load/1, [
+		comment is 'Loads a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file.',
 		argnames is ['File']
 	]).
 
@@ -71,7 +64,13 @@
 		argnames is ['InputExpression', 'OutputExpression']
 	]).
 
-	:- public(grammar_main_predicate/10).
+	:- private(grammar_main_predicate/10).
+
+	:- private(cached_directive_/1).
+	:- dynamic(cached_directive_/1).
+
+	:- private(discontiguous_/1).
+	:- dynamic(discontiguous_/1).
 
 	/*
 	This Logtalk implementation of the Definite Clause Translation Grammar is
@@ -89,16 +88,13 @@
 
 	:- include(dctg_operators).
 
-	process(DCTGExpression, Clause) :-
-		term_expansion(DCTGExpression, Clause).
-
-	consult(Path, Name) :-
+	load(Path, Name) :-
 		decompose_file_name(Path, _, Name, '.dctg'),
 		this(This),
 		logtalk_load(Path, [hook(This)]).
 
-	consult(Path) :-
-		consult(Path, _).
+	load(Path) :-
+		load(Path, _).
 
 	compile(Path) :-
 		decompose_file_name(Path, Directory, Name, '.dctg'),
@@ -113,17 +109,23 @@
 		fail.
 	term_expansion(begin_of_file, [(:- object(Object, imports(dctg_evaluate)))]) :-
 		logtalk_load_context(basename, Basename),
-		atom_concat(Object, '.dctg', Basename).
+		atom_concat(Object, '.dctg', Basename),
+		retractall(cached_directive_(_)),
+		retractall(discontiguous_(_)).
 	term_expansion((:- Directive0), [(:- Directive)]) :-
 		nonvar(Directive0),
 		Directive0 =.. [object, Object| Relations0],
 		add_category_import(Relations0, Relations),
-		Directive =.. [object, Object| Relations].
+		Directive =.. [object, Object| Relations],
+		retractall(cached_directive_(_)),
+		retractall(discontiguous_(_)).
 	term_expansion((:- Directive0), [(:- Directive)]) :-
 		nonvar(Directive0),
 		Directive0 =.. [category, Object| Relations0],
 		add_category_extend(Relations0, Relations),
-		Directive =.. [category, Object| Relations].
+		Directive =.. [category, Object| Relations],
+		retractall(cached_directive_(_)),
+		retractall(discontiguous_(_)).
 	term_expansion(dctg_main(Main, Eval),
 		[ParseDirective1, ParseDirective2, EvaluateDirective1, EvaluateDirective2,
 		 ParseClause1, ParseClause2, EvaluateClause1, EvaluateClause2, SemClause]) :-
@@ -133,38 +135,50 @@
 			EvaluateIndicator1, EvaluateClause1,
 			EvaluateIndicator2, EvaluateClause2
 			),
-%		format('~w -> ~w~n', [dctg_main(Main, Eval), grammar_main_predicate(Main, Eval,
-%			ParseIndicator1, ParseClause1,
-%			ParseIndicator2, ParseClause2,
-%			EvaluateIndicator1, EvaluateClause1,
-%			EvaluateIndicator2, EvaluateClause2
-%			)]),
+		dbg('~w -> ~w~n'+[dctg_main(Main, Eval), grammar_main_predicate(Main, Eval,
+			ParseIndicator1, ParseClause1,
+			ParseIndicator2, ParseClause2,
+			EvaluateIndicator1, EvaluateClause1,
+			EvaluateIndicator2, EvaluateClause2
+		)]),
 		ParseDirective1 = (:- public(ParseIndicator1)),
 		ParseDirective2 = (:- public(ParseIndicator2)),
 		EvaluateDirective1 = (:- public(EvaluateIndicator1)),
 		EvaluateDirective2 = (:- public(EvaluateIndicator2)),
-		SemClause = (^^(A,B) :- ::eval(A, B)).
+		SemClause = (^^(Tree, Goals) :- ::eval(Tree, Goals)).
 	term_expansion((LP::=[]<:>Sem), [H|Clauses]) :-
 		!,
-		^^t_lp(LP, [], S, S, Sem, H, Clauses).
+		^^t_lp(LP, [], S, S, Sem, H, Terms),
+		cache_directives(Terms,  Clauses).
 	term_expansion((LP::=[]), H) :-
 		!,
 		^^t_lp(LP, [], S, S, true, H, []).
-	term_expansion((LP::=RP<:>Sem), [(:-discontiguous(F/A)),(H:-B)|Clauses]) :-
+	term_expansion((LP::=RP<:>Sem), ExpandedTerms) :-
 		!,
 		dbg('  Process 3: ~w'+[rp(RP)]),
-		^^t_rp(RP, [], StL, S, SR, B1),
+		^^t_rp(RP, [], StL, S, SR, Body0),
 		reverse(StL, RStL),
 		dbg('  Process 3: ~w'+[lp(LP, RStL, S, SR)]),
-		^^t_lp(LP, RStL, S, SR, Sem, H, Clauses),
-		functor(H, F, A),
-		tidy(B1, B).
-	term_expansion((LP::=RP), Result) :-
+		^^t_lp(LP, RStL, S, SR, Sem, Head, Terms),
+		functor(Head, Functor, Arity),
+		tidy(Body0, Body),
+		cache_directives(Terms, Clauses),
+		(	discontiguous_(Functor/Arity) ->
+			ExpandedTerms = [(Head :-Body)| Clauses]
+		;	ExpandedTerms = [(:-discontiguous(Functor/Arity)), (Head :- Body)| Clauses],
+			assertz(discontiguous_(Functor/Arity))
+		).
+	term_expansion((LP::=RP), ExpandedTerms) :-
 		!,
-		term_expansion((LP::=RP<:>true), Result).
-	term_expansion(end_of_file, [(:- end_object), end_of_file]) :-
+		term_expansion((LP::=RP<:>true), ExpandedTerms).
+	term_expansion((:- end_object), Directives) :-
+		findall((:- Directive), retract(cached_directive_(Directive)), Directives, [(:- end_object)]).
+	term_expansion((:- end_category), Directives) :-
+		findall((:- Directive), retract(cached_directive_(Directive)), Directives, [(:- end_category)]).
+	term_expansion(end_of_file, Directives) :-
 		logtalk_load_context(basename, Basename),
-		atom_concat(_, '.dctg', Basename).
+		atom_concat(_, '.dctg', Basename),
+		findall((:- Directive), retract(cached_directive_(Directive)), Directives, [(:- end_object), end_of_file]).
 
 	add_category_import([], [imports(dctg_evaluate)]).
 	add_category_import([imports(Imports0)| Relations], [imports(Imports)| Relations]) :-
@@ -268,5 +282,16 @@
 		tidy(P1, Q1),
 		tidy(P2, Q2).
 	tidy(A, A).
+
+	cache_directives([], []).
+	cache_directives([(:- Directive)| Terms], Clauses) :-
+		!,
+		(	cached_directive_(Directive) ->
+			true
+		;	assertz(cached_directive_(Directive))
+		),
+		cache_directives(Terms, Clauses).
+	cache_directives([Clause| Terms], [Clause| Clauses]) :-
+		cache_directives(Terms, Clauses).
 
 :- end_object.
