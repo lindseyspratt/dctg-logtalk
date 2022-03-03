@@ -28,7 +28,7 @@
 		'src/dctg_print_tree',
 		'src/dctg_translate',
 		'src/dctg_evaluate',
-		'src/dctg_process'
+		'src/dctg'
 	], [
 		optimize(on)
 	])

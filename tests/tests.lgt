@@ -37,6 +37,11 @@
 
 	:- uses(dctg, [term_expansion(A,_) as proc(A)]).
 
+	cover(dctg).
+	cover(dctg_evaluate).
+	cover(dctg_print_tree).
+	cover(dctg_translate).
+
 	test(dctg_terminal_list_01, true) :-
 		proc((p ::= [])).
 	test(dctg_terminal_list_02, true) :-
@@ -211,16 +216,26 @@
 
 	% embedding tests
 
-	test(dctg_embed_01, true(V == [a,b,c])) :-
-		file_path('embedded.lgt', Path),
-		logtalk_load(Path, [hook(dctg)]),
+	test(dctg_embedded_object_01, true) :-
+		file_path('embedded_object.lgt', Path),
+		logtalk_load(Path, [hook(dctg)]).
+	test(dctg_embedded_object_02, true(V == [a,b,c])) :-
 		% avoid linter warning on unknown object by using the {}/1 control construct
-		{embedded::evaluate([a,b,c], V)}.
-	test(dctg_embed_02, true((R == [], V == [a,b,c]))) :-
-		file_path('embedded.lgt', Path),
-		logtalk_load(Path, [hook(dctg)]),
+		{embedded_object::evaluate([a,b,c], V)}.
+	test(dctg_embedded_object_03, true((R == [], V == [a,b,c]))) :-
 		% avoid linter warning on unknown object by using the {}/1 control construct
-		{embedded::evaluate([a,b,c], R, V)}.
+		{embedded_object::evaluate([a,b,c], R, V)}.
+
+	test(dctg_embedded_category_01, true) :-
+		file_path('embedded_category.lgt', Path),
+		logtalk_load(Path, [hook(dctg)]),
+		create_object(import_object, [imports(embedded_category)], [], []).
+	test(dctg_embedded_category_02, true(V == [a,b,c])) :-
+		% avoid linter warning on unknown object by using the {}/1 control construct
+		{import_object::evaluate([a,b,c], V)}.
+	test(dctg_embedded_category_03, true((R == [], V == [a,b,c]))) :-
+		% avoid linter warning on unknown object by using the {}/1 control construct
+		{import_object::evaluate([a,b,c], R, V)}.
 
 	% auxiliary predicates
 

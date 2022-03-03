@@ -18,7 +18,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-:- object(embedded).
+:- category(embedded_category).
 
 	dctg_main(token/0, value/1).
 
@@ -41,4 +41,4 @@
 
 	token_char(_).
 
-:- end_object.
+:- end_category.

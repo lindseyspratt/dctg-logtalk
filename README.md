@@ -6,9 +6,9 @@ Definite Clause Translation Grammar rules (DCTGs) are represented as:
 
 	LeftPart ::= RightPart <:> Attributes ::- Semantics.
 
-In this term, `LeftPart ::= RightPart` represents syntax while
-`Attributes ::- Semantics` represents semantics. As in DCGs, `LeftPart`
-can either be a non-terminal possibly followed by a list of terminals
+In this term, `LeftPart ::= RightPart` represents the rule syntax while
+`Attributes ::- Semantics` represents the rule semantics. As in DCGs,
+`LeftPart` is a non-terminal possibly followed by a list of terminals
 (aka a "push-back" list).
 
 
@@ -47,4 +47,5 @@ by Harvey Abramson:
 		year      = 1984,
 	}
 
-In Abramson's implementation, `dctg::process/2` is called `translate_rule/2`.
+In Abramson's implementation, the `dctg::term_expansion/2` predicate is
+called `translate_rule/2`.
