@@ -25,28 +25,21 @@
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-02-24,
+		date is 2022-02-03,
 		comment is 'Definite Clause Translation Grammar (DCTG), based on the work of Harvey Abramson.'
 	]).
 
-	:- public(process/2).
-	:- mode(process(+evaluable, -clause), one).
-	:- info(process/2, [
-		comment is 'Process a Definite Clause Translation Grammar expression to create a Prolog clause that implements the expression.',
-		argnames is ['DCTGExpression', 'Clause']
-	]).
-
-	:- public(consult/2).
-	:- mode(consult(+atom, -atom), one).
-	:- info(consult/2, [
-		comment is 'Consults a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file.',
+	:- public(load/2).
+	:- mode(load(+atom, -atom), one).
+	:- info(load/2, [
+		comment is 'Loads a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file.',
 		argnames is ['File', 'GrammarObject']
 	]).
 
-	:- public(consult/1).
-	:- mode(consult(+atom), one).
-	:- info(consult/1, [
-		comment is 'Consults a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file.',
+	:- public(load/1).
+	:- mode(load(+atom), one).
+	:- info(load/1, [
+		comment is 'Loads a Definite Clause Translation Grammar file (which must have a ``.dctg`` extension) by creating and loading a Logalk file defining a ``GrammarObject`` object named after the file.',
 		argnames is ['File']
 	]).
 
@@ -95,16 +88,13 @@
 
 	:- include(dctg_operators).
 
-	process(DCTGExpression, Clause) :-
-		term_expansion(DCTGExpression, Clause).
-
-	consult(Path, Name) :-
+	load(Path, Name) :-
 		decompose_file_name(Path, _, Name, '.dctg'),
 		this(This),
 		logtalk_load(Path, [hook(This)]).
 
-	consult(Path) :-
-		consult(Path, _).
+	load(Path) :-
+		load(Path, _).
 
 	compile(Path) :-
 		decompose_file_name(Path, Directory, Name, '.dctg'),

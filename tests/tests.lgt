@@ -25,8 +25,8 @@
 	extends(lgtunit)).
 
 	:- info([
-		version is 0:4:0,
-		date is 2022-02-18,
+		version is 0:5:0,
+		date is 2022-03-03,
 		author is 'Lindsey Spratt',
 		comment is 'Test cases for the DCTG translator.'
 	]).
@@ -35,7 +35,7 @@
 
 	% terminal tests with list notation
 
-	:- uses(dctg, [process(A,_) as proc(A)]).
+	:- uses(dctg, [term_expansion(A,_) as proc(A)]).
 
 	test(dctg_terminal_list_01, true) :-
 		proc((p ::= [])).
@@ -197,16 +197,16 @@
 
 	test(dctg_example_01, true(V == [a,b,c])) :-
 		file_path('../examples/token.dctg', Path),
-		dctg::consult(Path, Object),
+		dctg::load(Path, Object),
 		Object::evaluate([a,b,c], V).
 	test(dctg_example_02, variant(V, E)) :-
 		file_path('../examples/logic.dctg', Path),
-		dctg::consult(Path, Object),
+		dctg::load(Path, Object),
 		E = exists(M, musician(M) & forall(S, (scientist(S) & hesitates(S)) => helps(M,S))),
 		Object::evaluate([a,musician,helps,every,scientist,that,hesitates], V).
 	test(dctg_example_03, true((R == [], V == [a,b,c]))) :-
 		file_path('../examples/token.dctg', Path),
-		dctg::consult(Path, Object),
+		dctg::load(Path, Object),
 		Object::evaluate([a,b,c], R, V).
 
 	% embedding tests
