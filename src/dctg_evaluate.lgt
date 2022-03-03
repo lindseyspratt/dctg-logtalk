@@ -126,14 +126,14 @@
 		^^print_node(Name, Sem).
 
 
-	trace_message(_Success,_Failure,Args,_Body) :-
+	trace_message(_Success, _Failure, Args, _Body) :-
 		\+ traced_attachment(Args),
 		!.
-	trace_message(Success,_Failure,_Args,Body) :-
+	trace_message(Success, _Failure, _Args, Body) :-
 		write(Success), write(' '),
 		^^print_semantics(Body),
 		nl.
-	trace_message(_Success, Failure, _Args,Body) :-
+	trace_message(_Success, Failure, _Args, Body) :-
 		write(Failure), write(' '),
 		^^print_semantics(Body),
 		nl,

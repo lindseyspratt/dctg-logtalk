@@ -71,8 +71,10 @@
 		phrase(t_sem(Sem, ID, TSem), Clauses),
 		add_extra_args([node(LP, StL, TSem), S, SR], LP, H).
 
-	t_rp(!, St, St, S, S, !) :- !.
-	t_rp([], St, [[]|St], S, S1, S=S1) :- !.
+	t_rp(!, St, St, S, S, !) :-
+		!.
+	t_rp([], St, [[]|St], S, S1, S=S1) :-
+		!.
 	t_rp([X], St, [[NX]|St], S, SR, S = [X| SR]) :-
 		dbg('    t_rp 3: ~w'+[rp([X], St)]),
 		integer(X),
@@ -140,7 +142,8 @@
 		atomic_concat(dctg_sem, ClauseID, Functor),
 		DCTGSem =.. [Functor, H, Nodes],
 		phrase(find_nodes(B), NodesRaw),
-		sort(NodesRaw, Nodes). % NodesRaw may have duplicate references to nodes, sort uniquifies the list.
+		% NodesRaw may have duplicate references to nodes, sort uniquifies the list.
+		sort(NodesRaw, Nodes).
 
 	t_clause_id(New) :-
 		(	retract(clause_id_(Old))
@@ -150,21 +153,21 @@
 		assertz(clause_id_(New)).
 
 	find_nodes((A,B)) -->
+		!,
 		find_nodes(A),
 		find_nodes(B).
-	find_nodes(B, N, T) :-
-		B =.. [F|Args],
-		(	F = (^^),
-			Args = [Node,_]
-		->	N = [Node|T]
-		;	find_nodes_list(Args, N, T)
-		).
+	find_nodes(Node^^_) -->
+		!,
+		[Node].
+	find_nodes(B) -->
+		{B =.. [_| Args]},
+		find_nodes_list(Args).
 
 	find_nodes_list([]) -->
 		[].
-	find_nodes_list([H|T]) -->
-		find_nodes(H),
-		find_nodes_list(T).
+	find_nodes_list([Head| Tail]) -->
+		find_nodes(Head),
+		find_nodes_list(Tail).
 
 	add_extra_args(L, T, T1) :-
 		T =.. [F|Tlist],

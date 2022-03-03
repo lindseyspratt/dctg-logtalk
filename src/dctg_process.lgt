@@ -71,7 +71,7 @@
 		argnames is ['InputExpression', 'OutputExpression']
 	]).
 
-	:- public(grammar_main_predicate/10).
+	:- private(grammar_main_predicate/10).
 
 	:- private(cached_directive_/1).
 	:- dynamic(cached_directive_/1).
@@ -155,7 +155,7 @@
 		ParseDirective2 = (:- public(ParseIndicator2)),
 		EvaluateDirective1 = (:- public(EvaluateIndicator1)),
 		EvaluateDirective2 = (:- public(EvaluateIndicator2)),
-		SemClause = (^^(A,B) :- ::eval(A, B)).
+		SemClause = (^^(Tree, Goals) :- ::eval(Tree, Goals)).
 	term_expansion((LP::=[]<:>Sem), [H|Clauses]) :-
 		!,
 		^^t_lp(LP, [], S, S, Sem, H, Terms),
@@ -166,21 +166,21 @@
 	term_expansion((LP::=RP<:>Sem), ExpandedTerms) :-
 		!,
 		dbg('  Process 3: ~w'+[rp(RP)]),
-		^^t_rp(RP, [], StL, S, SR, B1),
+		^^t_rp(RP, [], StL, S, SR, Body0),
 		reverse(StL, RStL),
 		dbg('  Process 3: ~w'+[lp(LP, RStL, S, SR)]),
-		^^t_lp(LP, RStL, S, SR, Sem, H, Terms),
-		functor(H, F, A),
-		tidy(B1, B),
+		^^t_lp(LP, RStL, S, SR, Sem, Head, Terms),
+		functor(Head, Functor, Arity),
+		tidy(Body0, Body),
 		cache_directives(Terms, Clauses),
-		(	discontiguous_(F/A) ->
-			ExpandedTerms = [(H:-B)|Clauses]
-		;	ExpandedTerms = [(:-discontiguous(F/A)),(H:-B)|Clauses],
-			assertz(discontiguous_(F/A))
+		(	discontiguous_(Functor/Arity) ->
+			ExpandedTerms = [(Head :-Body)| Clauses]
+		;	ExpandedTerms = [(:-discontiguous(Functor/Arity)), (Head :- Body)| Clauses],
+			assertz(discontiguous_(Functor/Arity))
 		).
-	term_expansion((LP::=RP), Result) :-
+	term_expansion((LP::=RP), ExpandedTerms) :-
 		!,
-		term_expansion((LP::=RP<:>true), Result).
+		term_expansion((LP::=RP<:>true), ExpandedTerms).
 	term_expansion((:- end_object), Directives) :-
 		findall((:- Directive), retract(cached_directive_(Directive)), Directives, [(:- end_object)]).
 	term_expansion((:- end_category), Directives) :-
