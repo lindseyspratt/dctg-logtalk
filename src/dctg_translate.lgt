@@ -133,17 +133,19 @@
 		t_sem(B, ID, BSem).
 	t_sem((H ::- B), ID, Sem) -->
 		!,
-		[CH1, CH2],
-		{t_sem_body(H, B, ID, Sem, [CH1, CH2])}.
+		[CH1, CH2, CH3],
+		{t_sem_body(H, B, ID, Sem, [CH1, CH2, CH3])}.
 	t_sem(H, _, H) -->
 		[].
 
-	t_sem_body(H, B, ClauseID, (H ::- ::DCTGSem), [(:- private(Functor/2)), (DCTGSem :- B)]) :-
+	t_sem_body(H, B, ClauseID, (H ::- ::DCTGSem), [(:- private(Functor/2)), (:- meta_predicate(MetaPred)), (DCTGSem :- B)]) :-
 		atomic_concat(dctg_sem, ClauseID, Functor),
+		MetaPred =.. [Functor,(*),(*)],
 		DCTGSem =.. [Functor, H, Nodes],
 		phrase(find_nodes(B), NodesRaw),
 		% NodesRaw may have duplicate references to nodes, sort uniquifies the list.
-		sort(NodesRaw, Nodes).
+		sort(NodesRaw, Nodes),
+		format('Compiled ~w to ~w and ~w~n', [(H ::- B), (H ::- ::DCTGSem), (DCTGSem :- B)]).
 
 	t_clause_id(New) :-
 		(	retract(clause_id_(Old))
@@ -152,6 +154,10 @@
 		),
 		assertz(clause_id_(New)).
 
+	find_nodes(Var) -->
+		{var(Var)},
+		!,
+		[Var].
 	find_nodes((A,B)) -->
 		!,
 		find_nodes(A),

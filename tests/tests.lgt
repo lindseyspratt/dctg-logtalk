@@ -199,6 +199,10 @@
 		proc((a ::= [] <:> b)).
 	test(dctg_semantics_02, true) :-
 		proc((a ::= [] <:> b ::- c)).
+	test(dctg_semantics_03, true) :-
+		proc((error_skip(A)::=[A],!<:>display::-display_item(1,A))).
+	test(dctg_semantics_04, true) :-
+		proc((a::=b^^X<:> c(P) ::- X^^d(P))).
 
 	test(dctg_example_01, true(V == [a,b,c])) :-
 		file_path('../examples/token.dctg', Path),

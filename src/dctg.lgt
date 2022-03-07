@@ -174,9 +174,11 @@
 		!,
 		term_expansion((LP::=RP<:>true), ExpandedTerms).
 	term_expansion((:- end_object), Directives) :-
-		findall((:- Directive), retract(cached_directive_(Directive)), Directives, [(:- end_object)]).
+		findall((:- Directive), retract(cached_directive_(Directive)), Directives, [(:- end_object)]),
+		format('Object directives: ~w~n', [Directives]).
 	term_expansion((:- end_category), Directives) :-
-		findall((:- Directive), retract(cached_directive_(Directive)), Directives, [(:- end_category)]).
+		findall((:- Directive), retract(cached_directive_(Directive)), Directives, [(:- end_category)]),
+		format('Category directives: ~w~n', [Directives]).
 	term_expansion(end_of_file, Directives) :-
 		logtalk_load_context(basename, Basename),
 		atom_concat(_, '.dctg', Basename),
