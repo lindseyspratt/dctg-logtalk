@@ -25,8 +25,8 @@
 	extends(lgtunit)).
 
 	:- info([
-		version is 0:5:0,
-		date is 2022-03-03,
+		version is 0:6:0,
+		date is 2022-03-07,
 		author is 'Lindsey Spratt',
 		comment is 'Test cases for the DCTG translator.'
 	]).
@@ -35,7 +35,7 @@
 
 	% terminal tests with list notation
 
-	:- uses(dctg, [term_expansion(A,_) as proc(A)]).
+	:- uses(dctg, [term_expansion(A,_) as expand(A)]).
 
 	cover(dctg).
 	cover(dctg_evaluate).
@@ -43,182 +43,188 @@
 	cover(dctg_translate).
 
 	test(dctg_terminal_list_01, true) :-
-		proc((p ::= [])).
+		expand((p ::= [])).
 	test(dctg_terminal_list_02, true) :-
-		proc((p ::= [b])).
+		expand((p ::= [b])).
 	test(dctg_terminal_list_03, true) :-
-		proc((p ::= [abc, xyz])).
+		expand((p ::= [abc, xyz])).
 	test(dctg_terminal_list_04, error(_)) :-
-		proc((p ::= [abc | xyz])).
+		expand((p ::= [abc | xyz])).
 	test(dctg_terminal_list_05, true) :-
-		proc((p ::= [[], {}, 3, 3.2, a(b)])).
+		expand((p ::= [[], {}, 3, 3.2, a(b)])).
 	test(dctg_terminal_list_06, true) :-
-		proc((p ::= [_])).
+		expand((p ::= [_])).
 
 	% terminal tests with string notation:
 	test(dctg_terminal_string_01, true) :-
-		proc((p ::= "b")).
+		expand((p ::= "b")).
 	test(dctg_terminal_string_02, true) :-
-		proc((p ::= "abc", "q")).
+		expand((p ::= "abc", "q")).
 	test(dctg_terminal_string_03, true) :-
-		proc((p ::= "abc" ; "q")).
+		expand((p ::= "abc" ; "q")).
 
 	% simple non-terminal tests:
 	test(dctg_non_terminal_01, true) :-
-		proc((p ::= b)).
+		expand((p ::= b)).
 	test(dctg_non_terminal_02, error(_)) :-
-		proc((p ::= 3)).
+		expand((p ::= 3)).
 	test(dctg_non_terminal_03, true) :-
-		proc((p(X) ::= b(X))).
+		expand((p(X) ::= b(X))).
 
 	% conjunction tests
 
 	test(dctg_conjunction_01, true) :-
-		proc((p ::= b, c)).
+		expand((p ::= b, c)).
 	test(dctg_conjunction_02, true) :-
-		proc((p ::= true, c)).
+		expand((p ::= true, c)).
 	test(dctg_conjunction_03, true) :-
-		proc((p ::= fail, c)).
+		expand((p ::= fail, c)).
 	test(dctg_conjunction_04, true) :-
-		proc((p(X) ::= call(X), c)).
+		expand((p(X) ::= call(X), c)).
 
 	% disjunction tests
 
 	test(dctg_disjunction_01, true) :-
-		proc((p ::= b ; c)).
+		expand((p ::= b ; c)).
 	test(dctg_disjunction_02, true) :-
-		proc((p ::= q ; [])).
+		expand((p ::= q ; [])).
 	test(dctg_disjunction_03, true) :-
-		proc((p ::= [a] ; [b])).
+		expand((p ::= [a] ; [b])).
 
 	% if-then-else tests
 
 	test(dctg_if_the_else_01, true) :-
-		proc((p ::= b -> c)).
+		expand((p ::= b -> c)).
 	test(dctg_if_the_else_02, true) :-
-		proc((p ::= b -> c; d)).
+		expand((p ::= b -> c; d)).
 	test(dctg_if_the_else_03, true) :-
-		proc((p ::= b -> c1, c2 ; d)).
+		expand((p ::= b -> c1, c2 ; d)).
 	test(dctg_if_the_else_04, true) :-
-		proc((p ::= b -> c ; d1, d2)).
+		expand((p ::= b -> c ; d1, d2)).
 	test(dctg_if_the_else_05, true) :-
-		proc((p ::= b1, b2 -> c ; d)).
+		expand((p ::= b1, b2 -> c ; d)).
 	test(dctg_if_the_else_06, true) :-
-		proc((p ::= [x] -> [] ; q)).
+		expand((p ::= [x] -> [] ; q)).
 
 	% negation tests
 
 	test(dctg_negation_01, true) :-
-		proc((p ::= \+ b, c)).
+		expand((p ::= \+ b, c)).
 	test(dctg_negation_02, true) :-
-		proc((p ::= b, \+ c, d)).
+		expand((p ::= b, \+ c, d)).
 
 	% cut tests
 
 	test(dctg_cut_01, true) :-
-		proc((p ::= !, [a])).
+		expand((p ::= !, [a])).
 	test(dctg_cut_02, true) :-
-		proc((p ::= b, !, c, d)).
+		expand((p ::= b, !, c, d)).
 	test(dctg_cut_03, true) :-
-		proc((p ::= b, !, c ; d)).
+		expand((p ::= b, !, c ; d)).
 	test(dctg_cut_04, true) :-
-		proc((p ::= [a], !, {fail})).
+		expand((p ::= [a], !, {fail})).
 	test(dctg_cut_05, true) :-
-		proc((p(a), [X] ::= !, [X, a], q)).
+		expand((p(a), [X] ::= !, [X, a], q)).
 	test(dctg_cut_06, true) :-
-		proc((p ::= a, ! ; b)).
+		expand((p ::= a, ! ; b)).
 
 	% {}/1 tests
 
 	test(dctg_bypass_01, true) :-
-		proc((p ::= {b})).
+		expand((p ::= {b})).
 	test(dctg_bypass_02, error(_)) :-
-		proc((p ::= {3})).
+		expand((p ::= {3})).
 	test(dctg_bypass_03, true) :-
-		proc((p ::= {c,d})).
+		expand((p ::= {c,d})).
 	test(dctg_bypass_04, true) :-
-		proc((p ::= '{}'((c,d)))).
+		expand((p ::= '{}'((c,d)))).
 	test(dctg_bypass_05, true) :-
-		proc((p ::= {a}, {b}, {c})).
+		expand((p ::= {a}, {b}, {c})).
 	test(dctg_bypass_06, true) :-
-		proc((p ::= {q} -> [a] ; [b])).
+		expand((p ::= {q} -> [a] ; [b])).
 	test(dctg_bypass_07, true) :-
-		proc((p ::= {q} -> [] ; b)).
+		expand((p ::= {q} -> [] ; b)).
 	test(dctg_bypass_08, true) :-
-		proc((p ::= [foo], {write(x)}, [bar])).
+		expand((p ::= [foo], {write(x)}, [bar])).
 	test(dctg_bypass_09, true) :-
-		proc((p ::= [foo], {write(hello)},{nl})).
+		expand((p ::= [foo], {write(hello)},{nl})).
 	test(dctg_bypass_10, true) :-
-		proc((p ::= [foo], {write(hello), nl})).
+		expand((p ::= [foo], {write(hello), nl})).
 
 	% "metacall" tests
 
 	test(dctg_metacall_01, true) :-
-		proc((p ::= _)).
+		expand((p ::= _)).
 	test(dctg_metacall_02, true) :-
-		proc((p(X) ::= X)).
+		expand((p(X) ::= X)).
 
 	% non-terminals corresponding to "graphic" characters
 	% or built-in operators/predicates
 
 	test(dctg_graphic_01, true) :-
-		proc(('[' ::= b, c)).
+		expand(('[' ::= b, c)).
 	test(dctg_graphic_02, true) :-
-		proc(((=) ::= b, c)).
+		expand(((=) ::= b, c)).
 
 	% pushback tests
 
 	test(dctg_push_back_list_01, true) :-
-		proc((p, [t] ::= b, c)).
+		expand((p, [t] ::= b, c)).
 	test(dctg_push_back_list_002, true) :-
-		proc((p, [t] ::= b, [t])).
+		expand((p, [t] ::= b, [t])).
 	test(dctg_push_back_list_003, true) :-
-		proc((p, [t] ::= b, [s, t])).
+		expand((p, [t] ::= b, [s, t])).
 	test(dctg_push_back_list_004, true) :-
-		proc((p, [t] ::= b, [s], [t])).
+		expand((p, [t] ::= b, [s], [t])).
 	test(dctg_push_back_list_005, true) :-
-		proc((p(X), [X] ::= [X])).
+		expand((p(X), [X] ::= [X])).
 	test(dctg_push_back_list_006, true) :-
-		proc((p(X, Y), [X, Y] ::= [X, Y])).
+		expand((p(X, Y), [X, Y] ::= [X, Y])).
 	test(dctg_push_back_list_007, true) :-
-		proc((p(a), [X] ::= !, [X, a], q)).
+		expand((p(a), [X] ::= !, [X, a], q)).
 	test(dctg_push_back_list_008, true) :-
-		proc((p, [a,b] ::= [foo], {write(hello), nl})).
+		expand((p, [a,b] ::= [foo], {write(hello), nl})).
 	test(dctg_push_back_list_09, error(_)) :-
-		proc((p, [t1], [t2] ::= b, c)).
+		expand((p, [t1], [t2] ::= b, c)).
 	test(dctg_push_back_list_10, error(_)) :-
-		proc((p, b ::= b)).
+		expand((p, b ::= b)).
 	test(dctg_push_back_list_11, error(_)) :-
-		proc(([t], p ::= b)).
+		expand(([t], p ::= b)).
 	test(dctg_push_back_list_12, error(_)) :-
-		proc(([t1], p, [t2] ::= b)).
+		expand(([t1], p, [t2] ::= b)).
 
 	% semantic test
 
 	test(dctg_semantics_01, true) :-
-		proc((a ::= [] <:> b)).
+		expand((a ::= [] <:> b)).
 	test(dctg_semantics_02, true) :-
-		proc((a ::= [] <:> b ::- c)).
+		expand((a ::= [] <:> b ::- c)).
 	test(dctg_semantics_03, true) :-
-		proc((error_skip(A)::=[A],!<:>display::-display_item(1,A))).
+		expand((error_skip(A)::=[A],!<:>display::-display_item(1,A))).
 	test(dctg_semantics_04, true) :-
-		proc((a::=b^^X<:> c(P) ::- X^^d(P))).
+		expand((a::=b^^X<:> c(P) ::- X^^d(P))).
 
-	test(dctg_example_01, true(V == [a,b,c])) :-
+	% compiling and loading *.dctg files
+
+	test(dctg_compile_1_01, true) :-
+		file_path('../examples/token.dctg', Path),
+		dctg::compile(Path).
+
+	test(dctg_load_1_01, true(V == [a,b,c])) :-
+		file_path('../examples/token.dctg', Path),
+		dctg::load(Path),
+		{token::evaluate([a,b,c], V)}.
+	test(dctg_load_2_02, true((R == [], V == [a,b,c]))) :-
 		file_path('../examples/token.dctg', Path),
 		dctg::load(Path, Object),
-		Object::evaluate([a,b,c], V).
-	test(dctg_example_02, variant(V, E)) :-
+		Object::evaluate([a,b,c], R, V).
+	test(dctg_load_2_03, variant(V, E)) :-
 		file_path('../examples/logic.dctg', Path),
 		dctg::load(Path, Object),
 		E = exists(M, musician(M) & forall(S, (scientist(S) & hesitates(S)) => helps(M,S))),
 		Object::evaluate([a,musician,helps,every,scientist,that,hesitates], V).
-	test(dctg_example_03, true((R == [], V == [a,b,c]))) :-
-		file_path('../examples/token.dctg', Path),
-		dctg::load(Path, Object),
-		Object::evaluate([a,b,c], R, V).
 
-	% embedding tests
+	% objects and cateogries embedding DCTGs tests
 
 	test(dctg_embedded_object_01, true) :-
 		file_path('embedded_object.lgt', Path),

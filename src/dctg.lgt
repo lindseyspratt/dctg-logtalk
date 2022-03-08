@@ -25,7 +25,7 @@
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-02-03,
+		date is 2022-03-08,
 		comment is 'Definite Clause Translation Grammar (DCTG), based on the work of Harvey Abramson.'
 	]).
 
@@ -175,10 +175,10 @@
 		term_expansion((LP::=RP<:>true), ExpandedTerms).
 	term_expansion((:- end_object), Directives) :-
 		findall((:- Directive), retract(cached_directive_(Directive)), Directives, [(:- end_object)]),
-		format('Object directives: ~w~n', [Directives]).
+		dbg('Object directives: ~w~n'+[Directives]).
 	term_expansion((:- end_category), Directives) :-
 		findall((:- Directive), retract(cached_directive_(Directive)), Directives, [(:- end_category)]),
-		format('Category directives: ~w~n', [Directives]).
+		dbg('Category directives: ~w~n'+[Directives]).
 	term_expansion(end_of_file, Directives) :-
 		logtalk_load_context(basename, Basename),
 		atom_concat(_, '.dctg', Basename),

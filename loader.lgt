@@ -30,6 +30,7 @@
 		'src/dctg_evaluate',
 		'src/dctg'
 	], [
-		optimize(on)
+		optimize(on),
+		portability(warning)
 	])
 )).

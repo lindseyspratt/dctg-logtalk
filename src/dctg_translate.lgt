@@ -23,7 +23,7 @@
 	:- info([
 		version is 1:0:0,
 		author is 'Lindsey Spratt',
-		date is 2022-03-02,
+		date is 2022-03-08,
 		comment is 'DCTG expression translation.'
 	]).
 
@@ -145,7 +145,7 @@
 		phrase(find_nodes(B), NodesRaw),
 		% NodesRaw may have duplicate references to nodes, sort uniquifies the list.
 		sort(NodesRaw, Nodes),
-		format('Compiled ~w to ~w and ~w~n', [(H ::- B), (H ::- ::DCTGSem), (DCTGSem :- B)]).
+		dbg('Compiled ~w to ~w and ~w~n'+[(H ::- B), (H ::- ::DCTGSem), (DCTGSem :- B)]).
 
 	t_clause_id(New) :-
 		(	retract(clause_id_(Old))
