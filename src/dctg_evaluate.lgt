@@ -89,18 +89,19 @@
 
 	/*
 	((Args ::- Traverse), Rules) ^^ Args :-
-	!,
-	trace_message('call','fail',Args,Traverse),
-	call(Traverse),
-	trace_message('exit','redo',Args,Traverse).
-	(Args, Rules) ^^ Args :- !.
+		!,
+		trace_message('call','fail',Args,Traverse),
+		call(Traverse),
+		trace_message('exit','redo',Args,Traverse).
+	(Args, Rules) ^^ Args :-
+		!.
 	(_, Rules) ^^ Args :-
-	Rules ^^ Args.
-	(Args ::- Traverse) ^^ Args :-
-	trace_message('call','fail', Args, Traverse),
-	call(Traverse),
-	trace_message('exit','redo', Args, Traverse).
-	Args ^^ Args.
+		Rules ^^ Args.
+		(Args ::- Traverse) ^^ Args :-
+		trace_message('call','fail', Args, Traverse),
+		call(Traverse),
+		trace_message('exit','redo', Args, Traverse).
+		Args ^^ Args.
 	*/
 
 	trace_node_message(Success, Failure, Name, Sem, Args) :-
